@@ -1,0 +1,252 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PartyType {
+  CUSTOMER
+  SUPPLIER
+  BOTH
+  OTHER
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum ChallanStatus {
+  DRAFT
+  ISSUED
+  PARTIALLY_RETURNED
+  CLOSED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  REFUNDED
+}
+
+enum UnitType {
+  PIECE
+  KILOGRAM
+  METER
+  LITER
+  ROLL
+  SET
+  BOX
+  DOZEN
+}
+
+enum GSTType {
+  TAXABLE
+  EXEMPT
+  NIL
+  RCM
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdParties  Party[]   @relation("PartyCreatedBy")
+  updatedParties  Party[]   @relation("PartyUpdatedBy")
+  createdProducts Product[] @relation("ProductCreatedBy")
+  updatedProducts Product[] @relation("ProductUpdatedBy")
+  createdInvoices Invoice[] @relation("InvoiceCreatedBy")
+  updatedInvoices Invoice[] @relation("InvoiceUpdatedBy")
+  createdChallans Challan[] @relation("ChallanCreatedBy")
+  updatedChallans Challan[] @relation("ChallanUpdatedBy")
+}
+
+model Party {
+  id                 String    @id @default(uuid())
+  code               String    @unique
+  name               String
+  partyType          PartyType
+  email              String?
+  phone              String?
+  gstin              String?   @unique
+  billingAddress1    String?
+  billingAddress2    String?
+  billingCity        String?
+  billingState       String?
+  billingPostalCode  String?
+  billingCountry     String?
+  shippingAddress1   String?
+  shippingAddress2   String?
+  shippingCity       String?
+  shippingState      String?
+  shippingPostalCode String?
+  shippingCountry    String?
+  isActive           Boolean   @default(true)
+  deletedAt          DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  createdById        String?
+  updatedById        String?
+  createdBy          User?     @relation("PartyCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy          User?     @relation("PartyUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  invoices           Invoice[]
+  challans           Challan[]
+
+  @@index([partyType])
+  @@index([name])
+  @@index([deletedAt])
+}
+
+model Product {
+  id             String        @id @default(uuid())
+  sku            String        @unique
+  name           String
+  description    String?
+  hsnCode        String?
+  unitType       UnitType
+  gstType        GSTType       @default(TAXABLE)
+  gstRate        Decimal       @default(0)
+  purchaseRate   Decimal       @default(0)
+  sellingRate    Decimal       @default(0)
+  trackInventory Boolean       @default(false)
+  openingStock   Decimal       @default(0)
+  reorderLevel   Decimal       @default(0)
+  isActive       Boolean       @default(true)
+  deletedAt      DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  createdById    String?
+  updatedById    String?
+  createdBy      User?         @relation("ProductCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy      User?         @relation("ProductUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  invoiceItems   InvoiceItem[]
+  challanItems   ChallanItem[]
+
+  @@index([name])
+  @@index([deletedAt])
+}
+
+model Invoice {
+  id             String        @id @default(uuid())
+  invoiceNumber  String        @unique
+  seriesCode     String
+  sequenceNumber Int
+  fiscalYear     String
+  partyId        String
+  party          Party         @relation(fields: [partyId], references: [id], onDelete: Restrict)
+  status         InvoiceStatus @default(DRAFT)
+  paymentStatus  PaymentStatus @default(UNPAID)
+  issueDate      DateTime      @default(now())
+  dueDate        DateTime?
+  notes          String?
+  subtotal       Decimal       @default(0)
+  discountAmount Decimal       @default(0)
+  gstAmount      Decimal       @default(0)
+  roundOff       Decimal       @default(0)
+  grandTotal     Decimal       @default(0)
+  paidAmount     Decimal       @default(0)
+  balanceAmount  Decimal       @default(0)
+  deletedAt      DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  createdById    String?
+  updatedById    String?
+  createdBy      User?         @relation("InvoiceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy      User?         @relation("InvoiceUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  items          InvoiceItem[]
+
+  @@index([partyId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([issueDate])
+  @@index([deletedAt])
+}
+
+model InvoiceItem {
+  id             String   @id @default(uuid())
+  invoiceId      String
+  productId      String?
+  description    String
+  quantity       Decimal
+  unitType       UnitType
+  unitPrice      Decimal
+  discountAmount Decimal  @default(0)
+  gstRate        Decimal  @default(0)
+  lineSubtotal   Decimal
+  lineGstAmount  Decimal  @default(0)
+  lineTotal      Decimal
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  invoice        Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product        Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([invoiceId])
+  @@index([productId])
+}
+
+model Challan {
+  id             String        @id @default(uuid())
+  challanNumber  String        @unique
+  seriesCode     String
+  sequenceNumber Int
+  fiscalYear     String
+  partyId        String
+  party          Party         @relation(fields: [partyId], references: [id], onDelete: Restrict)
+  status         ChallanStatus @default(DRAFT)
+  issueDate      DateTime      @default(now())
+  notes          String?
+  subtotal       Decimal       @default(0)
+  discountAmount Decimal       @default(0)
+  gstAmount      Decimal       @default(0)
+  roundOff       Decimal       @default(0)
+  grandTotal     Decimal       @default(0)
+  deletedAt      DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  createdById    String?
+  updatedById    String?
+  createdBy      User?         @relation("ChallanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy      User?         @relation("ChallanUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  items          ChallanItem[]
+
+  @@index([partyId])
+  @@index([status])
+  @@index([issueDate])
+  @@index([deletedAt])
+}
+
+model ChallanItem {
+  id             String   @id @default(uuid())
+  challanId      String
+  productId      String?
+  description    String
+  quantity       Decimal
+  unitType       UnitType
+  unitPrice      Decimal
+  discountAmount Decimal  @default(0)
+  gstRate        Decimal  @default(0)
+  lineSubtotal   Decimal
+  lineGstAmount  Decimal  @default(0)
+  lineTotal      Decimal
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  challan        Challan  @relation(fields: [challanId], references: [id], onDelete: Cascade)
+  product        Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([challanId])
+  @@index([productId])
+}
