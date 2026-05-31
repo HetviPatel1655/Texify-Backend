@@ -4,8 +4,29 @@ import { prisma } from "../lib/prisma";
 import { createListQuery, type RepositoryListResult } from "../common/repositories/base.repository";
 import { buildSearchWhere } from "../common/utils/query";
 import { formatDecimalValue } from "../common/utils/decimal";
-import type { ChallanDto, ChallanListQuery } from "./challans.types";
+import type { ChallanDto, ChallanItemDto, ChallanListQuery, ChallanPartyDto, ChallanRollEntryDto } from "./challans.types";
 import { challanSearchableFields } from "./challans.constants";
+
+const challanPartySelect = {
+  id: true,
+  code: true,
+  name: true,
+  partyType: true,
+  gstin: true,
+  phone: true,
+  billingAddress1: true,
+  billingAddress2: true,
+  billingCity: true,
+  billingState: true,
+  billingStateCode: true,
+  billingPostalCode: true,
+  shippingAddress1: true,
+  shippingAddress2: true,
+  shippingCity: true,
+  shippingState: true,
+  shippingStateCode: true,
+  shippingPostalCode: true
+} as const;
 
 const challanSelect = {
   id: true,
@@ -17,11 +38,23 @@ const challanSelect = {
   partyId: true,
   status: true,
   issueDate: true,
+  agentName: true,
   notes: true,
   terms: true,
+  remark: true,
   transportMode: true,
   vehicleNumber: true,
   placeOfSupply: true,
+  deliveryPartyName: true,
+  deliveryAddress1: true,
+  deliveryAddress2: true,
+  deliveryCity: true,
+  deliveryState: true,
+  deliveryPostalCode: true,
+  deliveryGstin: true,
+  deliveryPhone: true,
+  totalTakas: true,
+  totalMeters: true,
   subtotal: true,
   discountAmount: true,
   gstAmount: true,
@@ -32,11 +65,13 @@ const challanSelect = {
   updatedAt: true,
   createdById: true,
   updatedById: true,
+  party: { select: challanPartySelect },
   items: {
     select: {
       id: true,
       productId: true,
       description: true,
+      hsnCode: true,
       quantity: true,
       unit: true,
       unitType: true,
@@ -46,12 +81,91 @@ const challanSelect = {
       taxableAmount: true,
       gstAmount: true,
       subtotal: true,
-      grandTotal: true
-    }
+      grandTotal: true,
+      sortOrder: true,
+      product: {
+        select: {
+          id: true,
+          sku: true,
+          name: true,
+          hsnCode: true,
+          unitType: true
+        }
+      },
+      rollEntries: {
+        select: {
+          id: true,
+          serialNumber: true,
+          meters: true
+        },
+        orderBy: { serialNumber: "asc" as const }
+      }
+    },
+    orderBy: { sortOrder: "asc" as const }
   }
 } as const;
 
 type ChallanRow = Prisma.ChallanGetPayload<{ select: typeof challanSelect }>;
+
+function toPartyDto(row: ChallanRow["party"]): ChallanPartyDto | null {
+  if (!row) return null;
+  return {
+    id: row.id,
+    code: row.code,
+    name: row.name,
+    partyType: row.partyType,
+    gstin: row.gstin,
+    phone: row.phone,
+    billingAddress1: row.billingAddress1,
+    billingAddress2: row.billingAddress2,
+    billingCity: row.billingCity,
+    billingState: row.billingState,
+    billingStateCode: row.billingStateCode,
+    billingPostalCode: row.billingPostalCode,
+    shippingAddress1: row.shippingAddress1,
+    shippingAddress2: row.shippingAddress2,
+    shippingCity: row.shippingCity,
+    shippingState: row.shippingState,
+    shippingStateCode: row.shippingStateCode,
+    shippingPostalCode: row.shippingPostalCode
+  };
+}
+
+function toRollEntryDto(entry: ChallanRow["items"][number]["rollEntries"][number]): ChallanRollEntryDto {
+  return {
+    id: entry.id,
+    serialNumber: entry.serialNumber,
+    meters: formatDecimalValue(entry.meters)
+  };
+}
+
+function toItemDto(item: ChallanRow["items"][number]): ChallanItemDto {
+  return {
+    id: item.id,
+    productId: item.productId,
+    description: item.description,
+    hsnCode: item.hsnCode,
+    quantity: formatDecimalValue(item.quantity),
+    unit: item.unit,
+    unitType: item.unitType,
+    rate: formatDecimalValue(item.rate),
+    discountAmount: formatDecimalValue(item.discountAmount),
+    gstRate: formatDecimalValue(item.gstRate),
+    taxableAmount: formatDecimalValue(item.taxableAmount),
+    gstAmount: formatDecimalValue(item.gstAmount),
+    subtotal: formatDecimalValue(item.subtotal),
+    grandTotal: formatDecimalValue(item.grandTotal),
+    sortOrder: item.sortOrder,
+    rollEntries: item.rollEntries.map(toRollEntryDto),
+    product: item.product ? {
+      id: item.product.id,
+      sku: item.product.sku,
+      name: item.product.name,
+      hsnCode: item.product.hsnCode,
+      unitType: item.product.unitType
+    } : null
+  };
+}
 
 function toChallanDto(row: ChallanRow): ChallanDto {
   return {
@@ -64,11 +178,23 @@ function toChallanDto(row: ChallanRow): ChallanDto {
     partyId: row.partyId,
     status: row.status,
     issueDate: row.issueDate.toISOString(),
+    agentName: row.agentName,
     notes: row.notes,
     terms: row.terms,
+    remark: row.remark,
     transportMode: row.transportMode,
     vehicleNumber: row.vehicleNumber,
     placeOfSupply: row.placeOfSupply,
+    deliveryPartyName: row.deliveryPartyName,
+    deliveryAddress1: row.deliveryAddress1,
+    deliveryAddress2: row.deliveryAddress2,
+    deliveryCity: row.deliveryCity,
+    deliveryState: row.deliveryState,
+    deliveryPostalCode: row.deliveryPostalCode,
+    deliveryGstin: row.deliveryGstin,
+    deliveryPhone: row.deliveryPhone,
+    totalTakas: row.totalTakas,
+    totalMeters: formatDecimalValue(row.totalMeters),
     subtotal: formatDecimalValue(row.subtotal),
     discountAmount: formatDecimalValue(row.discountAmount),
     gstAmount: formatDecimalValue(row.gstAmount),
@@ -79,21 +205,8 @@ function toChallanDto(row: ChallanRow): ChallanDto {
     updatedAt: row.updatedAt.toISOString(),
     createdById: row.createdById,
     updatedById: row.updatedById,
-    items: row.items.map((item: any) => ({
-      id: item.id,
-      productId: item.productId,
-      description: item.description,
-      quantity: formatDecimalValue(item.quantity),
-      unit: item.unit,
-      unitType: item.unitType,
-      rate: formatDecimalValue(item.rate),
-      discountAmount: formatDecimalValue(item.discountAmount),
-      gstRate: formatDecimalValue(item.gstRate),
-      taxableAmount: formatDecimalValue(item.taxableAmount),
-      gstAmount: formatDecimalValue(item.gstAmount),
-      subtotal: formatDecimalValue(item.subtotal),
-      grandTotal: formatDecimalValue(item.grandTotal)
-    }))
+    party: toPartyDto(row.party),
+    items: row.items.map(toItemDto)
   };
 }
 
@@ -146,28 +259,6 @@ export class ChallansRepository {
     });
 
     return row ? toChallanDto(row) : null;
-  }
-
-  async create(data: Prisma.ChallanCreateInput, items: Prisma.ChallanItemCreateWithoutChallanInput[], client: any = prisma): Promise<ChallanDto> {
-    const row = await client.challan.create({
-      data: {
-        ...data,
-        items: { create: items }
-      },
-      select: challanSelect
-    });
-
-    return toChallanDto(row);
-  }
-
-  async update(id: string, data: Prisma.ChallanUpdateInput, client: any = prisma): Promise<ChallanDto> {
-    const row = await client.challan.update({
-      where: { id },
-      data,
-      select: challanSelect
-    });
-
-    return toChallanDto(row);
   }
 
   async softDelete(id: string, client: any = prisma): Promise<void> {

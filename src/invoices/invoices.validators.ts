@@ -29,7 +29,8 @@ const optionalDateQuery = z.preprocess((value) => {
 const invoiceItemSchema = z.object({
   productId: z.string().uuid(),
   quantity: z.coerce.number().positive(),
-  unitPrice: z.coerce.number().min(0)
+  unitPrice: z.coerce.number().min(0),
+  pieces: z.coerce.number().min(0).nullable().optional()
 });
 
 export const createInvoiceSchema = z.object({
@@ -38,11 +39,24 @@ export const createInvoiceSchema = z.object({
   gstType: z.enum(GSTTypes),
   discount: z.coerce.number().min(0).optional().default(0),
   dueDate: optionalDate,
-  notes: z.string().nullable().optional(),
-  terms: z.string().nullable().optional(),
+  dueDays: z.coerce.number().int().min(0).nullable().optional(),
+  orderNo: z.string().nullable().optional(),
+  agentName: z.string().nullable().optional(),
+  transporterName: z.string().nullable().optional(),
   transportMode: z.string().nullable().optional(),
   vehicleNumber: z.string().nullable().optional(),
+  lrNo: z.string().nullable().optional(),
+  eWayBillNo: z.string().nullable().optional(),
   placeOfSupply: z.string().nullable().optional(),
+  challanId: z.string().uuid().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  terms: z.string().nullable().optional(),
+  remark: z.string().nullable().optional(),
+  interestRate: z.coerce.number().min(0).max(100).nullable().optional(),
+  bankName: z.string().nullable().optional(),
+  bankAccountNo: z.string().nullable().optional(),
+  bankIfsc: z.string().nullable().optional(),
+  bankBranch: z.string().nullable().optional(),
   items: z.array(invoiceItemSchema).min(1)
 });
 
@@ -53,12 +67,25 @@ export const updateInvoiceSchema = z.object({
   discount: z.coerce.number().min(0).optional(),
   status: z.enum(InvoiceStatuses).optional(),
   paymentStatus: z.enum(PaymentStatuses).optional(),
-  notes: z.string().nullable().optional(),
-  terms: z.string().nullable().optional(),
+  dueDate: optionalDate,
+  dueDays: z.coerce.number().int().min(0).nullable().optional(),
+  orderNo: z.string().nullable().optional(),
+  agentName: z.string().nullable().optional(),
+  transporterName: z.string().nullable().optional(),
   transportMode: z.string().nullable().optional(),
   vehicleNumber: z.string().nullable().optional(),
+  lrNo: z.string().nullable().optional(),
+  eWayBillNo: z.string().nullable().optional(),
   placeOfSupply: z.string().nullable().optional(),
-  dueDate: optionalDate,
+  challanId: z.string().uuid().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  terms: z.string().nullable().optional(),
+  remark: z.string().nullable().optional(),
+  interestRate: z.coerce.number().min(0).max(100).nullable().optional(),
+  bankName: z.string().nullable().optional(),
+  bankAccountNo: z.string().nullable().optional(),
+  bankIfsc: z.string().nullable().optional(),
+  bankBranch: z.string().nullable().optional(),
   items: z.array(invoiceItemSchema).min(1).optional()
 });
 
