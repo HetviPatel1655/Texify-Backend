@@ -17,8 +17,13 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const me = asyncHandler(async (req: Request, res: Response) => {
-  // user is attached by auth middleware
   const user = (req as any).user;
 
   return ApiResponse.ok(res, "Current user", { user });
+});
+
+export const refresh = asyncHandler(async (req: Request, res: Response) => {
+  const tokens = await AuthService.refresh(req.body.refreshToken);
+
+  return ApiResponse.ok(res, "Token refreshed", tokens);
 });

@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import jwt, { type JwtPayload } from "jsonwebtoken";
 
 import { prisma } from "../lib/prisma";
 import { env } from "../config";
@@ -49,5 +49,27 @@ export const AuthService = {
     const refreshToken = j.sign({ sub: user.id, role: user.role }, secret, { expiresIn: env.REFRESH_TOKEN_EXPIRES_IN ?? "7d" });
 
     return { accessToken, refreshToken };
+  },
+
+  async refresh(incomingRefreshToken: string) {
+    const secret = env.JWT_SECRET as unknown as jwt.Secret;
+
+    let payload: JwtPayload;
+    try {
+      payload = jwt.verify(incomingRefreshToken, secret) as JwtPayload;
+    } catch {
+      throw new AppError("Invalid or expired refresh token", 401);
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: payload.sub as string }, select: { id: true, role: true } });
+    if (!user) {
+      throw new AppError("User not found", 401);
+    }
+
+    const j: any = jwt as any;
+    const accessToken = j.sign({ sub: user.id, role: user.role }, secret, { expiresIn: env.ACCESS_TOKEN_EXPIRES_IN ?? "15m" });
+    const newRefreshToken = j.sign({ sub: user.id, role: user.role }, secret, { expiresIn: env.REFRESH_TOKEN_EXPIRES_IN ?? "7d" });
+
+    return { accessToken, refreshToken: newRefreshToken };
   }
 };

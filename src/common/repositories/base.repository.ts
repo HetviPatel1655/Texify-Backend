@@ -1,5 +1,3 @@
-import type { Prisma } from "@prisma/client";
-
 import { buildPagination, buildSearchWhere, buildSort } from "../utils/query";
 
 export interface RepositoryListOptions {
@@ -20,10 +18,7 @@ export interface RepositoryListResult<T> {
   };
 }
 
-export function createListQuery<TWhere extends Prisma.InputJsonValue>(
-  options: RepositoryListOptions,
-  searchableFields: string[] = []
-) {
+export function createListQuery(options: RepositoryListOptions, searchableFields: string[] = []) {
   const pagination = buildPagination(options.page, options.limit);
   const orderBy = buildSort(options.sortBy, options.sortOrder);
   const searchWhere = buildSearchWhere(searchableFields, options.search);

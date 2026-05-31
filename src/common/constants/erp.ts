@@ -4,6 +4,7 @@ export const ChallanStatuses = ["DRAFT", "ISSUED", "PARTIALLY_RETURNED", "CLOSED
 export const PaymentStatuses = ["UNPAID", "PARTIAL", "PAID", "REFUNDED"] as const;
 export const UnitTypes = ["PIECE", "KILOGRAM", "METER", "LITER", "ROLL", "SET", "BOX", "DOZEN"] as const;
 export const GSTTypes = ["TAXABLE", "EXEMPT", "NIL", "RCM"] as const;
+export const DocumentTypes = ["INVOICE", "CHALLAN"] as const;
 
 export type PartyType = (typeof PartyTypes)[number];
 export type InvoiceStatus = (typeof InvoiceStatuses)[number];
@@ -11,3 +12,4 @@ export type ChallanStatus = (typeof ChallanStatuses)[number];
 export type PaymentStatus = (typeof PaymentStatuses)[number];
 export type UnitType = (typeof UnitTypes)[number];
 export type GSTType = (typeof GSTTypes)[number];
+export type DocumentType = (typeof DocumentTypes)[number];

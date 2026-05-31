@@ -8,10 +8,14 @@ export interface UpdateResult<TEntity> {
   data: TEntity;
 }
 
+export interface CrudContext {
+  actorId?: string;
+}
+
 export interface BaseCrudService<TEntity, TCreateDto, TUpdateDto, TListQuery = RepositoryListOptions> {
   list(query: TListQuery): Promise<RepositoryListResult<TEntity>>;
   getById(id: string): Promise<TEntity | null>;
-  create(dto: TCreateDto): Promise<CreateResult<TEntity>>;
-  update(id: string, dto: TUpdateDto): Promise<UpdateResult<TEntity>>;
-  remove(id: string): Promise<void>;
+  create(dto: TCreateDto, context?: CrudContext): Promise<CreateResult<TEntity>>;
+  update(id: string, dto: TUpdateDto, context?: CrudContext): Promise<UpdateResult<TEntity>>;
+  remove(id: string, context?: CrudContext): Promise<void>;
 }
