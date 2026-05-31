@@ -6,7 +6,7 @@
     "paths": {
       "@prisma/client": ["./node_modules/.prisma/client"]
     },
-    "rootDir": ".",
+    "rootDir": "src",
     "outDir": "dist",
     "strict": true,
     "skipLibCheck": true,
@@ -16,6 +16,6 @@
     "noEmitOnError": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "prisma/**/*.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
