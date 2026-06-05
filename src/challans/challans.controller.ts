@@ -31,6 +31,11 @@ export const getChallanById = asyncHandler(async (req: Request, res: Response) =
   return ApiResponse.ok(res, "Challan retrieved", challan);
 });
 
+export const getNextChallanNumber = asyncHandler(async (_req: Request, res: Response) => {
+  const nextNumber = await challansService.getNextNumber();
+  return ApiResponse.ok(res, "Next challan number", { nextNumber });
+});
+
 export const createChallan = asyncHandler(async (req: Request, res: Response) => {
   const actorId = (req as any).user?.id;
   const result = await challansService.create(req.body, { actorId });

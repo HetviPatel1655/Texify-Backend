@@ -23,6 +23,13 @@ export class ChallansService implements BaseCrudService<ChallanDto, CreateChalla
     return this.challansRepository.findById(id);
   }
 
+  async getNextNumber(): Promise<string> {
+    const fiscalYear = fiscalYearFromDate(new Date());
+    const seriesCode = "CHL";
+    const sequenceNumber = await this.challansRepository.nextSequence(seriesCode, fiscalYear);
+    return buildChallanNumber(seriesCode, sequenceNumber, fiscalYear);
+  }
+
   async create(dto: CreateChallanDto, context?: CrudContext): Promise<CreateResult<ChallanDto>> {
     return prisma.$transaction(async (tx) => {
       const db = tx as any;
