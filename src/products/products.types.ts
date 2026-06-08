@@ -6,7 +6,7 @@ export interface ProductDto {
   sku: string | null;
   name: string;
   description: string | null;
-  hsnCode: string;
+  hsnCode: string | null;
   unitType: UnitType;
   gstType: GSTType;
   gstRate: string;
