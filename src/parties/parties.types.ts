@@ -24,6 +24,7 @@ export interface PartyDto {
   shippingStateCode: string | null;
   shippingPostalCode: string | null;
   shippingCountry: string | null;
+  dueDays: number | null;
   isActive: boolean;
   deletedAt: string | null;
   createdAt: string;
@@ -56,6 +57,7 @@ export interface CreatePartyDto {
   shippingStateCode?: string | null;
   shippingPostalCode?: string | null;
   shippingCountry?: string | null;
+  dueDays?: number | null;
   isActive?: boolean;
 }
 
@@ -80,6 +82,7 @@ export interface UpdatePartyDto {
   shippingStateCode?: string | null;
   shippingPostalCode?: string | null;
   shippingCountry?: string | null;
+  dueDays?: number | null;
   isActive?: boolean;
 }
 

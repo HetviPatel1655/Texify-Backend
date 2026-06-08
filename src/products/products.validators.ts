@@ -17,13 +17,13 @@ const optionalPositiveInt = z.preprocess((value) => {
 }, z.coerce.number().int().positive().optional());
 
 export const createProductSchema = z.object({
-  sku: z.string().min(2),
+  sku: z.string().min(2).nullable().optional(),
   name: z.string().min(2),
   description: z.string().nullable().optional(),
-  hsnCode: z.string().nullable().optional(),
+  hsnCode: z.string().min(1, "HSN Code is required"),
   unitType: z.enum(UnitTypes),
   gstType: z.enum(GSTTypes).optional(),
-  gstRate: z.coerce.number().min(0).default(0),
+  gstRate: z.coerce.number().min(0).default(5),
   purchaseRate: z.coerce.number().min(0).default(0),
   sellingRate: z.coerce.number().min(0).default(0),
   trackInventory: z.boolean().optional().default(false),
@@ -35,7 +35,7 @@ export const createProductSchema = z.object({
 export const updateProductSchema = z.object({
   name: z.string().min(2).optional(),
   description: z.string().nullable().optional(),
-  hsnCode: z.string().nullable().optional(),
+  hsnCode: z.string().min(1, "HSN Code is required").optional(),
   unitType: z.enum(UnitTypes).optional(),
   gstType: z.enum(GSTTypes).optional(),
   gstRate: z.coerce.number().min(0).optional(),

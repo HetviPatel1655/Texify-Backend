@@ -19,10 +19,10 @@ export class ProductsService implements BaseCrudService<ProductDto, CreateProduc
 
   async create(dto: CreateProductDto, context?: CrudContext): Promise<CreateResult<ProductDto>> {
     const product = await this.productsRepository.create({
-      sku: dto.sku,
+      sku: dto.sku ?? null,
       name: dto.name,
       description: dto.description ?? null,
-      hsnCode: dto.hsnCode ?? null,
+      hsnCode: dto.hsnCode,
       unitType: dto.unitType,
       gstType: dto.gstType ?? "TAXABLE",
       gstRate: dto.gstRate ?? 0,
@@ -49,7 +49,7 @@ export class ProductsService implements BaseCrudService<ProductDto, CreateProduc
     const product = await this.productsRepository.update(id, {
       name: dto.name,
       description: dto.description ?? undefined,
-      hsnCode: dto.hsnCode ?? undefined,
+      hsnCode: dto.hsnCode,
       unitType: dto.unitType,
       gstType: dto.gstType,
       gstRate: dto.gstRate,

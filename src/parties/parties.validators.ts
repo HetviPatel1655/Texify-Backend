@@ -43,16 +43,17 @@ const partyPayloadSchema = z
     billingAddress2: z.string().min(2).nullable().optional(),
     billingCity: z.string().min(2).nullable().optional(),
     billingState: z.string().min(2).nullable().optional(),
-    billingStateCode: z.string().min(1).nullable().optional(),
+    billingStateCode: z.string().nullable().optional(),
     billingPostalCode: z.string().min(2).nullable().optional(),
     billingCountry: z.string().min(2).nullable().optional(),
     shippingAddress1: z.string().min(2).nullable().optional(),
     shippingAddress2: z.string().min(2).nullable().optional(),
     shippingCity: z.string().min(2).nullable().optional(),
     shippingState: z.string().min(2).nullable().optional(),
-    shippingStateCode: z.string().min(1).nullable().optional(),
+    shippingStateCode: z.string().nullable().optional(),
     shippingPostalCode: z.string().min(2).nullable().optional(),
     shippingCountry: z.string().min(2).nullable().optional(),
+    dueDays: z.coerce.number().int().min(0).nullable().optional(),
     isActive: z.boolean().optional()
   })
   .transform((data) => ({
@@ -77,6 +78,7 @@ const partyPayloadSchema = z
     shippingStateCode: data.shippingStateCode,
     shippingPostalCode: data.shippingPostalCode,
     shippingCountry: data.shippingCountry,
+    dueDays: data.dueDays,
     isActive: data.isActive
   }));
 
@@ -103,6 +105,7 @@ export const updatePartySchema = z.object({
   shippingStateCode: z.string().min(1).nullable().optional(),
   shippingPostalCode: z.string().min(2).nullable().optional(),
   shippingCountry: z.string().min(2).nullable().optional(),
+  dueDays: z.coerce.number().int().min(0).nullable().optional(),
   isActive: z.boolean().optional()
 });
 

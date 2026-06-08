@@ -3,10 +3,10 @@ import type { ListQuery } from "../common/types/query";
 
 export interface ProductDto {
   id: string;
-  sku: string;
+  sku: string | null;
   name: string;
   description: string | null;
-  hsnCode: string | null;
+  hsnCode: string;
   unitType: UnitType;
   gstType: GSTType;
   gstRate: string;
@@ -24,10 +24,10 @@ export interface ProductDto {
 }
 
 export interface CreateProductDto {
-  sku: string;
+  sku?: string | null;
   name: string;
   description?: string | null;
-  hsnCode?: string | null;
+  hsnCode: string;
   unitType: UnitType;
   gstType?: GSTType;
   gstRate?: number;
@@ -42,7 +42,7 @@ export interface CreateProductDto {
 export interface UpdateProductDto {
   name?: string;
   description?: string | null;
-  hsnCode?: string | null;
+  hsnCode?: string;
   unitType?: UnitType;
   gstType?: GSTType;
   gstRate?: number;

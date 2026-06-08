@@ -134,6 +134,7 @@ model Party {
   shippingStateCode  String?
   shippingPostalCode String?
   shippingCountry    String?
+  dueDays            Int?
   isActive           Boolean   @default(true)
   deletedAt          DateTime?
   createdAt          DateTime  @default(now())
@@ -155,13 +156,13 @@ model Party {
 
 model Product {
   id             String        @id @default(uuid())
-  sku            String        @unique
+  sku            String?       @unique
   name           String
   description    String?
   hsnCode        String?
   unitType       UnitType
   gstType        GSTType       @default(TAXABLE)
-  gstRate        Decimal       @default(0)
+  gstRate        Decimal       @default(5)
   purchaseRate   Decimal       @default(0)
   sellingRate    Decimal       @default(0)
   trackInventory Boolean       @default(false)
