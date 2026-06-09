@@ -25,7 +25,7 @@ export interface InvoicePartyDto {
 
 export interface InvoiceProductDto {
   id: string;
-  sku: string;
+  sku: string | null;
   name: string;
   hsnCode: string | null;
   unitType: UnitType;

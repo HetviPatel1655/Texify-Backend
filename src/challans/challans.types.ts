@@ -29,7 +29,7 @@ export interface ChallanItemDto {
 
 export interface ChallanProductDto {
   id: string;
-  sku: string;
+  sku: string | null;
   name: string;
   hsnCode: string | null;
   unitType: string;
