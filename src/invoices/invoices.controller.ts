@@ -25,6 +25,11 @@ export const getInvoiceById = asyncHandler(async (req: Request, res: Response) =
   return ApiResponse.ok(res, "Invoice retrieved", invoice);
 });
 
+export const getNextInvoiceNumber = asyncHandler(async (_req: Request, res: Response) => {
+  const nextNumber = await invoicesService.getNextNumber();
+  return ApiResponse.ok(res, "Next invoice number", { nextNumber });
+});
+
 export const createInvoice = asyncHandler(async (req: Request, res: Response) => {
   const actorId = (req as any).user?.id;
   const result = await invoicesService.create(req.body, { actorId });

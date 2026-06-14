@@ -79,7 +79,16 @@ export class ChallansService implements BaseCrudService<ChallanDto, CreateChalla
         }
       }
 
-      const sequenceNumber = await this.challansRepository.nextSequence(seriesCode, fiscalYear, tx);
+      let sequenceNumber: number;
+      if (dto.sequenceNumber) {
+        const exists = await this.challansRepository.numberExists(seriesCode, dto.sequenceNumber, fiscalYear, tx);
+        if (exists) {
+          throw new AppError(`Challan number ${buildChallanNumber(seriesCode, dto.sequenceNumber, fiscalYear)} already exists`, 409);
+        }
+        sequenceNumber = dto.sequenceNumber;
+      } else {
+        sequenceNumber = await this.challansRepository.nextSequence(seriesCode, fiscalYear, tx);
+      }
       const challanNumber = buildChallanNumber(seriesCode, sequenceNumber, fiscalYear);
 
       // Auto-fill delivery from party shipping if not provided

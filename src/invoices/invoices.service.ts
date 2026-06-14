@@ -212,6 +212,10 @@ function calculateInvoiceLines(items: InvoiceLineSource[], gstType: GSTType, dis
     }
   }
 
+  const rawTotal = roundMoney(taxableAmountTotal.add(gstAmountTotal));
+  const roundedTotal = rawTotal.toDecimalPlaces(0, Prisma.Decimal.ROUND_HALF_UP);
+  const roundOff = roundedTotal.minus(rawTotal);
+
   return {
     invoiceDiscount,
     subtotal: roundMoney(subtotalTotal),
@@ -223,8 +227,8 @@ function calculateInvoiceLines(items: InvoiceLineSource[], gstType: GSTType, dis
     cgstAmount,
     igstRate,
     igstAmount,
-    roundOff: roundMoney(grandTotal.minus(taxableAmountTotal).minus(gstAmountTotal)),
-    grandTotal,
+    roundOff,
+    grandTotal: roundedTotal,
     lines: calculatedLines
   };
 }
@@ -238,6 +242,13 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
 
   async getById(id: string): Promise<InvoiceDto | null> {
     return this.invoicesRepository.findById(id);
+  }
+
+  async getNextNumber(): Promise<string> {
+    const fiscalYear = fiscalYearFromDate(new Date());
+    const seriesCode = "INV";
+    const sequenceNumber = await this.invoicesRepository.nextSequence(seriesCode, fiscalYear);
+    return buildInvoiceNumber(seriesCode, sequenceNumber, fiscalYear);
   }
 
   async create(dto: CreateInvoiceDto, context?: CrudContext): Promise<CreateResult<InvoiceDto>> {
@@ -277,7 +288,16 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
         dto.placeOfSupply
       );
 
-      const sequenceNumber = await this.invoicesRepository.nextSequence(seriesCode, fiscalYear, db);
+      let sequenceNumber: number;
+      if (dto.sequenceNumber) {
+        const exists = await this.invoicesRepository.numberExists(seriesCode, dto.sequenceNumber, fiscalYear, db);
+        if (exists) {
+          throw new AppError(`Invoice number ${buildInvoiceNumber(seriesCode, dto.sequenceNumber, fiscalYear)} already exists`, 409);
+        }
+        sequenceNumber = dto.sequenceNumber;
+      } else {
+        sequenceNumber = await this.invoicesRepository.nextSequence(seriesCode, fiscalYear, db);
+      }
       const invoiceNumber = buildInvoiceNumber(seriesCode, sequenceNumber, fiscalYear);
 
       // Calculate dueDays if dueDate provided but dueDays not

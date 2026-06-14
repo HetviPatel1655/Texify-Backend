@@ -305,4 +305,13 @@ export class InvoicesRepository {
 
     return (row?.sequenceNumber ?? 0) + 1;
   }
+
+  async numberExists(seriesCode: string, sequenceNumber: number, fiscalYear: string, client: any = prisma): Promise<boolean> {
+    const row = await client.invoice.findFirst({
+      where: { seriesCode, sequenceNumber, fiscalYear, deletedAt: null },
+      select: { id: true }
+    });
+
+    return row !== null;
+  }
 }

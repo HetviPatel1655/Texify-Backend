@@ -116,6 +116,7 @@ export interface CreateChallanItemDto {
 
 export interface CreateChallanDto {
   partyId: string;
+  sequenceNumber?: number;
   issueDate?: Date;
   agentName?: string | null;
   notes?: string | null;

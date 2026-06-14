@@ -37,6 +37,7 @@ const challanItemSchema = z.object({
 
 export const createChallanSchema = z.object({
   partyId: z.string().uuid(),
+  sequenceNumber: z.coerce.number().int().positive().optional(),
   issueDate: optionalDate,
   agentName: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),

@@ -115,6 +115,7 @@ export interface CreateInvoiceItemDto {
 
 export interface CreateInvoiceDto {
   partyId: string;
+  sequenceNumber?: number;
   invoiceDate?: Date;
   gstType: GSTType;
   discount?: number;

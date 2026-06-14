@@ -35,6 +35,7 @@ const invoiceItemSchema = z.object({
 
 export const createInvoiceSchema = z.object({
   partyId: z.string().uuid(),
+  sequenceNumber: z.coerce.number().int().positive().optional(),
   invoiceDate: optionalDate,
   gstType: z.enum(GSTTypes),
   discount: z.coerce.number().min(0).optional().default(0),
