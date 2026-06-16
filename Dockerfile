@@ -1,4 +1,4 @@
-FROM node:24-alpine AS build
+FROM node:24-slim AS build
 
 WORKDIR /app
 
@@ -11,7 +11,24 @@ COPY src ./src
 
 RUN npx prisma generate && npm run build
 
-FROM node:24-alpine AS runtime
+FROM node:24-slim AS runtime
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium \
+    fonts-liberation \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdrm2 \
+    libgbm1 \
+    libnss3 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
 ENV NODE_ENV=production
