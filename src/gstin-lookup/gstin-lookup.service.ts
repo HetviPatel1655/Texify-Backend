@@ -1,5 +1,5 @@
-import { env } from "../config/env.js";
 import { AppError } from "../common/errors/appError.js";
+import { getValidApiKey, incrementCallCount } from "./gstin-key-manager.js";
 import type { GstinLookupResult } from "./gstin-lookup.types.js";
 
 const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$/;
@@ -146,11 +146,13 @@ export async function lookupGstin(gstin: string): Promise<GstinLookupResult> {
     throw new AppError("Invalid GSTIN format. Must be 15 characters (e.g. 24AABCU9603R1ZM)", 400);
   }
 
-  const apiKey = env.GSTIN_API_KEY;
+  const apiKey = await getValidApiKey();
 
   if (!apiKey) {
     return localExtract(normalized);
   }
 
-  return fetchFromGstinCheck(normalized, apiKey);
+  const result = await fetchFromGstinCheck(normalized, apiKey);
+  await incrementCallCount();
+  return result;
 }

@@ -92,6 +92,12 @@ model CompanyProfile {
   updatedAt     DateTime @updatedAt
 }
 
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
 model User {
   id        String   @id @default(uuid())
   name      String
