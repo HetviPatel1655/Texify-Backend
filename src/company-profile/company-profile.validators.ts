@@ -3,7 +3,7 @@ import { z } from "zod";
 export const upsertCompanyProfileSchema = z.object({
   companyName: z.string().trim().min(2),
   tagline: z.string().nullable().optional(),
-  logoUrl: z.string().url().nullable().optional(),
+  logoUrl: z.string().nullable().optional(),
   businessType: z.string().nullable().optional(),
   address1: z.string().trim().min(2),
   address2: z.string().nullable().optional(),
