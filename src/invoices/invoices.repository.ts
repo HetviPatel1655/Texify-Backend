@@ -238,11 +238,12 @@ function toInvoiceDto(row: InvoiceListRow | InvoiceDetailRow): InvoiceDto {
 }
 
 export class InvoicesRepository {
-  async list(query: InvoiceListQuery): Promise<RepositoryListResult<InvoiceDto>> {
+  async list(query: InvoiceListQuery, tenantId: string): Promise<RepositoryListResult<InvoiceDto>> {
     const listQuery = createListQuery(query, [...invoiceSearchableFields]);
     const searchWhere = buildSearchWhere([...invoiceSearchableFields], query.search);
 
     const where: Prisma.InvoiceWhereInput = {
+      tenantId,
       deletedAt: null,
       ...(query.status ? { status: query.status } : {}),
       ...(query.paymentStatus ? { paymentStatus: query.paymentStatus } : {}),
@@ -280,25 +281,27 @@ export class InvoicesRepository {
     };
   }
 
-  async findById(id: string, client: any = prisma): Promise<InvoiceDto | null> {
+  async findById(id: string, tenantId: string, client: any = prisma): Promise<InvoiceDto | null> {
     const row = await client.invoice.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: invoiceDetailSelect
     });
 
     return row ? toInvoiceDto(row) : null;
   }
 
-  async softDelete(id: string, client: any = prisma): Promise<void> {
+  async softDelete(id: string, tenantId: string, client: any = prisma): Promise<void> {
+    const existing = await client.invoice.findFirst({ where: { id, tenantId } });
+    if (!existing) return;
     await client.invoice.update({
       where: { id },
       data: { deletedAt: new Date() }
     });
   }
 
-  async nextSequence(seriesCode: string, fiscalYear: string, client: any = prisma): Promise<number> {
+  async nextSequence(seriesCode: string, fiscalYear: string, tenantId: string, client: any = prisma): Promise<number> {
     const row = await client.invoice.findFirst({
-      where: { seriesCode, fiscalYear },
+      where: { seriesCode, fiscalYear, tenantId },
       orderBy: { sequenceNumber: "desc" },
       select: { sequenceNumber: true }
     });
@@ -306,9 +309,9 @@ export class InvoicesRepository {
     return (row?.sequenceNumber ?? 0) + 1;
   }
 
-  async numberExists(seriesCode: string, sequenceNumber: number, fiscalYear: string, client: any = prisma): Promise<boolean> {
+  async numberExists(seriesCode: string, sequenceNumber: number, fiscalYear: string, tenantId: string, client: any = prisma): Promise<boolean> {
     const row = await client.invoice.findFirst({
-      where: { seriesCode, sequenceNumber, fiscalYear, deletedAt: null },
+      where: { seriesCode, sequenceNumber, fiscalYear, tenantId, deletedAt: null },
       select: { id: true }
     });
 

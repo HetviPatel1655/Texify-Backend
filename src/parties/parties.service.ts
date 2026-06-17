@@ -25,16 +25,17 @@ function normalizePartyCode(code: string | undefined, name: string): string {
 export class PartiesService implements BaseCrudService<PartyDto, CreatePartyDto, UpdatePartyDto, PartyListQuery> {
   constructor(private readonly partiesRepository = new PartiesRepository()) {}
 
-  async list(query: PartyListQuery): Promise<RepositoryListResult<PartyDto>> {
-    return this.partiesRepository.list(query);
+  async list(query: PartyListQuery, tenantId: string): Promise<RepositoryListResult<PartyDto>> {
+    return this.partiesRepository.list(query, tenantId);
   }
 
-  async getById(id: string): Promise<PartyDto | null> {
-    return this.partiesRepository.findById(id);
+  async getById(id: string, tenantId: string): Promise<PartyDto | null> {
+    return this.partiesRepository.findById(id, tenantId);
   }
 
-  async create(dto: CreatePartyDto, context?: CrudContext): Promise<CreateResult<PartyDto>> {
+  async create(dto: CreatePartyDto, context: CrudContext): Promise<CreateResult<PartyDto>> {
     const party = await this.partiesRepository.create({
+      tenant: { connect: { id: context.tenantId } },
       code: normalizePartyCode(dto.code, dto.name),
       name: dto.name,
       partyType: dto.partyType,
@@ -58,15 +59,15 @@ export class PartiesService implements BaseCrudService<PartyDto, CreatePartyDto,
       shippingCountry: dto.shippingCountry ?? null,
       dueDays: dto.dueDays ?? null,
       isActive: dto.isActive ?? true,
-      createdBy: context?.actorId ? { connect: { id: context.actorId } } : undefined,
-      updatedBy: context?.actorId ? { connect: { id: context.actorId } } : undefined
+      createdBy: context.actorId ? { connect: { id: context.actorId } } : undefined,
+      updatedBy: context.actorId ? { connect: { id: context.actorId } } : undefined
     });
 
     return { data: party };
   }
 
-  async update(id: string, dto: UpdatePartyDto, context?: CrudContext): Promise<UpdateResult<PartyDto>> {
-    const existing = await this.partiesRepository.findById(id);
+  async update(id: string, dto: UpdatePartyDto, context: CrudContext): Promise<UpdateResult<PartyDto>> {
+    const existing = await this.partiesRepository.findById(id, context.tenantId);
 
     if (!existing) {
       throw new AppError("Party not found", 404);
@@ -95,19 +96,19 @@ export class PartiesService implements BaseCrudService<PartyDto, CreatePartyDto,
       shippingCountry: dto.shippingCountry ?? undefined,
       dueDays: dto.dueDays !== undefined ? dto.dueDays : undefined,
       isActive: dto.isActive,
-      updatedBy: context?.actorId ? { connect: { id: context.actorId } } : undefined
+      updatedBy: context.actorId ? { connect: { id: context.actorId } } : undefined
     } as Prisma.PartyUpdateInput);
 
     return { data: party };
   }
 
-  async remove(id: string): Promise<void> {
-    const existing = await this.partiesRepository.findById(id);
+  async remove(id: string, context: CrudContext): Promise<void> {
+    const existing = await this.partiesRepository.findById(id, context.tenantId);
 
     if (!existing) {
       throw new AppError("Party not found", 404);
     }
 
-    await this.partiesRepository.softDelete(id);
+    await this.partiesRepository.softDelete(id, context.tenantId);
   }
 }

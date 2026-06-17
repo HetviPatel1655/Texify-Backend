@@ -15,10 +15,13 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     const token = authHeader.replace("Bearer ", "");
 
     const secret = env.JWT_SECRET as unknown as jwt.Secret;
-    const payload = jwt.verify(token, secret) as { sub: string; role?: string };
+    const payload = jwt.verify(token, secret) as { sub: string; role?: string; tenantId?: string };
 
-    // attach minimal user info; service layer can load more
-    (req as any).user = { id: payload.sub, role: payload.role };
+    if (!payload.tenantId) {
+      throw new AppError("Token missing tenant context. Please log in again.", 401);
+    }
+
+    (req as any).user = { id: payload.sub, role: payload.role, tenantId: payload.tenantId };
 
     next();
   } catch (err) {

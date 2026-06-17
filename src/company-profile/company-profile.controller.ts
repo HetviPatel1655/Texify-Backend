@@ -6,12 +6,14 @@ import { CompanyProfileService } from "./company-profile.service";
 
 const service = new CompanyProfileService();
 
-export const getCompanyProfile = asyncHandler(async (_req: Request, res: Response) => {
-  const profile = await service.get();
+export const getCompanyProfile = asyncHandler(async (req: Request, res: Response) => {
+  const { tenantId } = (req as any).user;
+  const profile = await service.get(tenantId);
   return ApiResponse.ok(res, "Company profile retrieved", profile);
 });
 
 export const upsertCompanyProfile = asyncHandler(async (req: Request, res: Response) => {
-  const profile = await service.upsert(req.body);
+  const { tenantId } = (req as any).user;
+  const profile = await service.upsert(req.body, tenantId);
   return ApiResponse.ok(res, "Company profile saved", profile);
 });

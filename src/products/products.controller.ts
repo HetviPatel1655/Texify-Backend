@@ -12,6 +12,7 @@ const productsService = new ProductsService();
 const idSchema = z.string().uuid();
 
 export const listProducts = asyncHandler(async (req: Request, res: Response) => {
+	const { tenantId } = (req as any).user;
 	const parsedQuery = parseListQuery(req.query as Record<string, unknown>);
 	const unitType = toOptionalString(req.query.unitType);
 	const gstType = toOptionalString(req.query.gstType);
@@ -21,14 +22,15 @@ export const listProducts = asyncHandler(async (req: Request, res: Response) => 
 		unitType: unitType && UnitTypes.includes(unitType as never) ? (unitType as never) : undefined,
 		gstType: gstType && GSTTypes.includes(gstType as never) ? (gstType as never) : undefined,
 		isActive: toOptionalBoolean(req.query.isActive)
-	});
+	}, tenantId);
 
 	return ApiResponse.ok(res, "Products retrieved", result);
 });
 
 export const getProductById = asyncHandler(async (req: Request, res: Response) => {
+	const { tenantId } = (req as any).user;
 	const id = idSchema.parse(req.params.id);
-	const product = await productsService.getById(id);
+	const product = await productsService.getById(id, tenantId);
 
 	if (!product) throw new AppError("Product not found", 404);
 
@@ -36,23 +38,24 @@ export const getProductById = asyncHandler(async (req: Request, res: Response) =
 });
 
 export const createProduct = asyncHandler(async (req: Request, res: Response) => {
-	const actorId = (req as any).user?.id;
-	const result = await productsService.create(req.body, { actorId });
+	const { id: actorId, tenantId } = (req as any).user;
+	const result = await productsService.create(req.body, { actorId, tenantId });
 
 	return ApiResponse.created(res, "Product created", result.data);
 });
 
 export const updateProduct = asyncHandler(async (req: Request, res: Response) => {
 	const id = idSchema.parse(req.params.id);
-	const actorId = (req as any).user?.id;
-	const result = await productsService.update(id, req.body, { actorId });
+	const { id: actorId, tenantId } = (req as any).user;
+	const result = await productsService.update(id, req.body, { actorId, tenantId });
 
 	return ApiResponse.ok(res, "Product updated", result.data);
 });
 
 export const deleteProduct = asyncHandler(async (req: Request, res: Response) => {
 	const id = idSchema.parse(req.params.id);
-	await productsService.remove(id);
+	const { id: actorId, tenantId } = (req as any).user;
+	await productsService.remove(id, { actorId, tenantId });
 
 	return ApiResponse.noContent(res);
 });

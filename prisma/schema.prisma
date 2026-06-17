@@ -62,8 +62,39 @@ enum DocumentType {
   CHALLAN
 }
 
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users          TenantUser[]
+  companyProfile CompanyProfile?
+  systemSettings SystemSetting[]
+  parties        Party[]
+  products       Product[]
+  invoices       Invoice[]
+  challans       Challan[]
+}
+
+model TenantUser {
+  id        String   @id @default(uuid())
+  tenantId  String
+  userId    String
+  role      String   @default("OWNER")
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId])
+  @@index([userId])
+}
+
 model CompanyProfile {
   id            String   @id @default(uuid())
+  tenantId      String   @unique
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   companyName   String
   tagline       String?
   logoUrl       String?
@@ -93,9 +124,15 @@ model CompanyProfile {
 }
 
 model SystemSetting {
-  key       String   @id
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  key       String
   value     String
   updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, key])
+  @@index([tenantId])
 }
 
 model User {
@@ -107,6 +144,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  tenantUsers     TenantUser[]
   createdParties  Party[]   @relation("PartyCreatedBy")
   updatedParties  Party[]   @relation("PartyUpdatedBy")
   createdProducts Product[] @relation("ProductCreatedBy")
@@ -119,12 +157,14 @@ model User {
 
 model Party {
   id                 String    @id @default(uuid())
-  code               String    @unique
+  tenantId           String
+  tenant             Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  code               String
   name               String
   partyType          PartyType
   email              String?
   phone              String?
-  gstin              String?   @unique
+  gstin              String?
   panNo              String?
   billingAddress1    String?
   billingAddress2    String?
@@ -152,6 +192,10 @@ model Party {
   invoices           Invoice[]
   challans           Challan[]
 
+  @@unique([tenantId, code])
+  @@unique([tenantId, gstin])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
   @@index([partyType])
   @@index([name])
   @@index([isActive])
@@ -162,7 +206,9 @@ model Party {
 
 model Product {
   id             String        @id @default(uuid())
-  sku            String?       @unique
+  tenantId       String
+  tenant         Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sku            String?
   name           String
   description    String?
   hsnCode        String?
@@ -185,6 +231,9 @@ model Product {
   invoiceItems   InvoiceItem[]
   challanItems   ChallanItem[]
 
+  @@unique([tenantId, sku])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
   @@index([name])
   @@index([unitType])
   @@index([gstType])
@@ -196,8 +245,10 @@ model Product {
 
 model Invoice {
   id              String        @id @default(uuid())
+  tenantId        String
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   documentType    DocumentType  @default(INVOICE)
-  invoiceNumber   String        @unique
+  invoiceNumber   String
   seriesCode      String
   sequenceNumber  Int
   fiscalYear      String
@@ -250,6 +301,10 @@ model Invoice {
   updatedBy       User?         @relation("InvoiceUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   items           InvoiceItem[]
 
+  @@unique([tenantId, invoiceNumber])
+  @@unique([tenantId, seriesCode, sequenceNumber, fiscalYear])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
   @@index([partyId])
   @@index([status])
   @@index([paymentStatus])
@@ -258,7 +313,6 @@ model Invoice {
   @@index([seriesCode, fiscalYear])
   @@index([partyId, issueDate])
   @@index([challanId])
-  @@unique([seriesCode, sequenceNumber, fiscalYear])
 }
 
 model InvoiceItem {
@@ -290,8 +344,10 @@ model InvoiceItem {
 
 model Challan {
   id                 String        @id @default(uuid())
+  tenantId           String
+  tenant             Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   documentType       DocumentType  @default(CHALLAN)
-  challanNumber      String        @unique
+  challanNumber      String
   seriesCode         String
   sequenceNumber     Int
   fiscalYear         String
@@ -331,13 +387,16 @@ model Challan {
   items              ChallanItem[]
   invoices           Invoice[]
 
+  @@unique([tenantId, challanNumber])
+  @@unique([tenantId, seriesCode, sequenceNumber, fiscalYear])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
   @@index([partyId])
   @@index([status])
   @@index([issueDate])
   @@index([deletedAt])
   @@index([seriesCode, fiscalYear])
   @@index([partyId, issueDate])
-  @@unique([seriesCode, sequenceNumber, fiscalYear])
 }
 
 model ChallanItem {

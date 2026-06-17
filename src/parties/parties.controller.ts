@@ -12,6 +12,7 @@ const partiesService = new PartiesService();
 const idSchema = z.string().uuid();
 
 export const listParties = asyncHandler(async (req: Request, res: Response) => {
+	const { tenantId } = (req as any).user;
 	const parsedQuery = parseListQuery(req.query as Record<string, unknown>);
 	const partyType = toOptionalString(req.query.partyType);
 
@@ -19,14 +20,15 @@ export const listParties = asyncHandler(async (req: Request, res: Response) => {
 		...parsedQuery,
 		partyType: partyType && PartyTypes.includes(partyType as never) ? (partyType as never) : undefined,
 		isActive: toOptionalBoolean(req.query.isActive)
-	});
+	}, tenantId);
 
 	return ApiResponse.ok(res, "Parties retrieved", result);
 });
 
 export const getPartyById = asyncHandler(async (req: Request, res: Response) => {
+	const { tenantId } = (req as any).user;
 	const id = idSchema.parse(req.params.id);
-	const party = await partiesService.getById(id);
+	const party = await partiesService.getById(id, tenantId);
 
 	if (!party) throw new AppError("Party not found", 404);
 
@@ -34,23 +36,24 @@ export const getPartyById = asyncHandler(async (req: Request, res: Response) => 
 });
 
 export const createParty = asyncHandler(async (req: Request, res: Response) => {
-	const actorId = (req as any).user?.id;
-	const result = await partiesService.create(req.body, { actorId });
+	const { id: actorId, tenantId } = (req as any).user;
+	const result = await partiesService.create(req.body, { actorId, tenantId });
 
 	return ApiResponse.created(res, "Party created", result.data);
 });
 
 export const updateParty = asyncHandler(async (req: Request, res: Response) => {
 	const id = idSchema.parse(req.params.id);
-	const actorId = (req as any).user?.id;
-	const result = await partiesService.update(id, req.body, { actorId });
+	const { id: actorId, tenantId } = (req as any).user;
+	const result = await partiesService.update(id, req.body, { actorId, tenantId });
 
 	return ApiResponse.ok(res, "Party updated", result.data);
 });
 
 export const deleteParty = asyncHandler(async (req: Request, res: Response) => {
 	const id = idSchema.parse(req.params.id);
-	await partiesService.remove(id);
+	const { id: actorId, tenantId } = (req as any).user;
+	await partiesService.remove(id, { actorId, tenantId });
 
 	return ApiResponse.noContent(res);
 });

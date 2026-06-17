@@ -56,11 +56,12 @@ function toProductDto(row: ProductRow): ProductDto {
 }
 
 export class ProductsRepository {
-  async list(query: ProductListQuery): Promise<RepositoryListResult<ProductDto>> {
+  async list(query: ProductListQuery, tenantId: string): Promise<RepositoryListResult<ProductDto>> {
     const listQuery = createListQuery(query, [...productSearchableFields]);
     const searchWhere = buildSearchWhere([...productSearchableFields], query.search);
 
     const where: Prisma.ProductWhereInput = {
+      tenantId,
       deletedAt: null,
       ...(query.unitType ? { unitType: query.unitType } : {}),
       ...(query.gstType ? { gstType: query.gstType } : {}),
@@ -90,9 +91,9 @@ export class ProductsRepository {
     };
   }
 
-  async findById(id: string): Promise<ProductDto | null> {
+  async findById(id: string, tenantId: string): Promise<ProductDto | null> {
     const row = await prisma.product.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: productSelect
     });
 
@@ -118,7 +119,9 @@ export class ProductsRepository {
     return toProductDto(row);
   }
 
-  async softDelete(id: string): Promise<void> {
+  async softDelete(id: string, tenantId: string): Promise<void> {
+    const existing = await prisma.product.findFirst({ where: { id, tenantId } });
+    if (!existing) return;
     await prisma.product.update({
       where: { id },
       data: { deletedAt: new Date(), isActive: false }

@@ -80,11 +80,12 @@ function toPartyDto(row: PartyRow): PartyDto {
 }
 
 export class PartiesRepository {
-  async list(query: PartyListQuery): Promise<RepositoryListResult<PartyDto>> {
+  async list(query: PartyListQuery, tenantId: string): Promise<RepositoryListResult<PartyDto>> {
     const listQuery = createListQuery(query, [...partySearchableFields]);
     const searchWhere = buildSearchWhere([...partySearchableFields], query.search);
 
     const where: Prisma.PartyWhereInput = {
+      tenantId,
       deletedAt: null,
       ...(query.partyType ? { partyType: query.partyType } : {}),
       ...(typeof query.isActive === "boolean" ? { isActive: query.isActive } : {}),
@@ -113,9 +114,9 @@ export class PartiesRepository {
     };
   }
 
-  async findById(id: string): Promise<PartyDto | null> {
+  async findById(id: string, tenantId: string): Promise<PartyDto | null> {
     const row = await prisma.party.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: partySelect
     });
 
@@ -141,7 +142,9 @@ export class PartiesRepository {
     return toPartyDto(row);
   }
 
-  async softDelete(id: string): Promise<void> {
+  async softDelete(id: string, tenantId: string): Promise<void> {
+    const existing = await prisma.party.findFirst({ where: { id, tenantId } });
+    if (!existing) return;
     await prisma.party.update({
       where: { id },
       data: { deletedAt: new Date(), isActive: false }

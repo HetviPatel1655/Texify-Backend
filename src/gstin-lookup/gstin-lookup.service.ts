@@ -139,20 +139,20 @@ async function fetchFromGstinCheck(gstin: string, apiKey: string): Promise<Gstin
 }
 
 // ── Main entry point ────────────────────────────────────────────────────
-export async function lookupGstin(gstin: string): Promise<GstinLookupResult> {
+export async function lookupGstin(gstin: string, tenantId: string): Promise<GstinLookupResult> {
   const normalized = gstin.trim().toUpperCase();
 
   if (!GSTIN_REGEX.test(normalized)) {
     throw new AppError("Invalid GSTIN format. Must be 15 characters (e.g. 24AABCU9603R1ZM)", 400);
   }
 
-  const apiKey = await getValidApiKey();
+  const apiKey = await getValidApiKey(tenantId);
 
   if (!apiKey) {
     return localExtract(normalized);
   }
 
   const result = await fetchFromGstinCheck(normalized, apiKey);
-  await incrementCallCount();
+  await incrementCallCount(tenantId);
   return result;
 }

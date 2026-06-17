@@ -15,22 +15,23 @@ function buildChallanNumber(seriesCode: string, sequenceNumber: number, fiscalYe
 export class ChallansService implements BaseCrudService<ChallanDto, CreateChallanDto, UpdateChallanDto, ChallanListQuery> {
   constructor(private readonly challansRepository = new ChallansRepository()) {}
 
-  async list(query: ChallanListQuery): Promise<RepositoryListResult<ChallanDto>> {
-    return this.challansRepository.list(query);
+  async list(query: ChallanListQuery, tenantId: string): Promise<RepositoryListResult<ChallanDto>> {
+    return this.challansRepository.list(query, tenantId);
   }
 
-  async getById(id: string): Promise<ChallanDto | null> {
-    return this.challansRepository.findById(id);
+  async getById(id: string, tenantId: string): Promise<ChallanDto | null> {
+    return this.challansRepository.findById(id, tenantId);
   }
 
-  async getNextNumber(): Promise<string> {
+  async getNextNumber(tenantId: string): Promise<string> {
     const fiscalYear = fiscalYearFromDate(new Date());
     const seriesCode = "CHL";
-    const sequenceNumber = await this.challansRepository.nextSequence(seriesCode, fiscalYear);
+    const sequenceNumber = await this.challansRepository.nextSequence(seriesCode, fiscalYear, tenantId);
     return buildChallanNumber(seriesCode, sequenceNumber, fiscalYear);
   }
 
-  async create(dto: CreateChallanDto, context?: CrudContext): Promise<CreateResult<ChallanDto>> {
+  async create(dto: CreateChallanDto, context: CrudContext): Promise<CreateResult<ChallanDto>> {
+    const tenantId = context.tenantId;
     return prisma.$transaction(async (tx) => {
       const db = tx as any;
       const issueDate = dto.issueDate ?? new Date();
@@ -38,7 +39,7 @@ export class ChallansService implements BaseCrudService<ChallanDto, CreateChalla
       const seriesCode = "CHL";
 
       const party = await db.party.findFirst({
-        where: { id: dto.partyId, deletedAt: null },
+        where: { id: dto.partyId, tenantId, deletedAt: null },
         select: {
           id: true,
           name: true,
@@ -58,7 +59,7 @@ export class ChallansService implements BaseCrudService<ChallanDto, CreateChalla
       const productIds = dto.items.map((item) => item.productId).filter((value): value is string => Boolean(value));
       if (productIds.length > 0) {
         const products = await db.product.findMany({
-          where: { id: { in: productIds }, deletedAt: null },
+          where: { id: { in: productIds }, tenantId, deletedAt: null },
           select: { id: true, hsnCode: true }
         });
 
@@ -71,7 +72,7 @@ export class ChallansService implements BaseCrudService<ChallanDto, CreateChalla
       const hsnMap = new Map<string, string | null>();
       if (productIds.length > 0) {
         const products = await db.product.findMany({
-          where: { id: { in: productIds } },
+          where: { id: { in: productIds }, tenantId },
           select: { id: true, hsnCode: true }
         });
         for (const p of products) {
@@ -81,13 +82,13 @@ export class ChallansService implements BaseCrudService<ChallanDto, CreateChalla
 
       let sequenceNumber: number;
       if (dto.sequenceNumber) {
-        const exists = await this.challansRepository.numberExists(seriesCode, dto.sequenceNumber, fiscalYear, tx);
+        const exists = await this.challansRepository.numberExists(seriesCode, dto.sequenceNumber, fiscalYear, tenantId, tx);
         if (exists) {
           throw new AppError(`Challan number ${buildChallanNumber(seriesCode, dto.sequenceNumber, fiscalYear)} already exists`, 409);
         }
         sequenceNumber = dto.sequenceNumber;
       } else {
-        sequenceNumber = await this.challansRepository.nextSequence(seriesCode, fiscalYear, tx);
+        sequenceNumber = await this.challansRepository.nextSequence(seriesCode, fiscalYear, tenantId, tx);
       }
       const challanNumber = buildChallanNumber(seriesCode, sequenceNumber, fiscalYear);
 
@@ -163,6 +164,7 @@ export class ChallansService implements BaseCrudService<ChallanDto, CreateChalla
 
       const challan = await db.challan.create({
         data: {
+          tenant: { connect: { id: tenantId } },
           challanNumber,
           seriesCode,
           sequenceNumber,
@@ -186,8 +188,8 @@ export class ChallansService implements BaseCrudService<ChallanDto, CreateChalla
           totalTakas: overallTotalTakas,
           totalMeters: overallTotalMeters,
           party: { connect: { id: dto.partyId } },
-          createdBy: context?.actorId ? { connect: { id: context.actorId } } : undefined,
-          updatedBy: context?.actorId ? { connect: { id: context.actorId } } : undefined,
+          createdBy: context.actorId ? { connect: { id: context.actorId } } : undefined,
+          updatedBy: context.actorId ? { connect: { id: context.actorId } } : undefined,
           subtotal: totals.subtotal,
           discountAmount: totals.discountAmount,
           gstAmount: totals.gstAmount,
@@ -198,16 +200,17 @@ export class ChallansService implements BaseCrudService<ChallanDto, CreateChalla
         select: { id: true }
       });
 
-      const result = await this.challansRepository.findById(challan.id, db);
+      const result = await this.challansRepository.findById(challan.id, tenantId, db);
       return { data: result! };
     });
   }
 
-  async update(id: string, dto: UpdateChallanDto, context?: CrudContext): Promise<UpdateResult<ChallanDto>> {
+  async update(id: string, dto: UpdateChallanDto, context: CrudContext): Promise<UpdateResult<ChallanDto>> {
+    const tenantId = context.tenantId;
     return prisma.$transaction(async (tx) => {
       const db = tx as any;
 
-      const existing = await this.challansRepository.findById(id, db);
+      const existing = await this.challansRepository.findById(id, tenantId, db);
       if (!existing) {
         throw new AppError("Challan not found", 404);
       }
@@ -221,7 +224,7 @@ export class ChallansService implements BaseCrudService<ChallanDto, CreateChalla
         const hsnMap = new Map<string, string | null>();
         if (productIds.length > 0) {
           const products = await db.product.findMany({
-            where: { id: { in: productIds } },
+            where: { id: { in: productIds }, tenantId },
             select: { id: true, hsnCode: true }
           });
           for (const p of products) {
@@ -314,7 +317,7 @@ export class ChallansService implements BaseCrudService<ChallanDto, CreateChalla
             discountAmount: totals.discountAmount,
             gstAmount: totals.gstAmount,
             grandTotal: totals.grandTotal,
-            updatedBy: context?.actorId ? { connect: { id: context.actorId } } : undefined,
+            updatedBy: context.actorId ? { connect: { id: context.actorId } } : undefined,
             items: { create: normalizedItems }
           }
         });
@@ -338,23 +341,23 @@ export class ChallansService implements BaseCrudService<ChallanDto, CreateChalla
             deliveryPostalCode: dto.deliveryPostalCode !== undefined ? dto.deliveryPostalCode : undefined,
             deliveryGstin: dto.deliveryGstin !== undefined ? dto.deliveryGstin : undefined,
             deliveryPhone: dto.deliveryPhone !== undefined ? dto.deliveryPhone : undefined,
-            updatedBy: context?.actorId ? { connect: { id: context.actorId } } : undefined
+            updatedBy: context.actorId ? { connect: { id: context.actorId } } : undefined
           }
         });
       }
 
-      const result = await this.challansRepository.findById(id, db);
+      const result = await this.challansRepository.findById(id, tenantId, db);
       return { data: result! };
     });
   }
 
-  async remove(id: string): Promise<void> {
-    const existing = await this.challansRepository.findById(id);
+  async remove(id: string, context: CrudContext): Promise<void> {
+    const existing = await this.challansRepository.findById(id, context.tenantId);
 
     if (!existing) {
       throw new AppError("Challan not found", 404);
     }
 
-    await this.challansRepository.softDelete(id);
+    await this.challansRepository.softDelete(id, context.tenantId);
   }
 }

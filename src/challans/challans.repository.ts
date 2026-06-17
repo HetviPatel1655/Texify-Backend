@@ -211,11 +211,12 @@ function toChallanDto(row: ChallanRow): ChallanDto {
 }
 
 export class ChallansRepository {
-  async list(query: ChallanListQuery, client: any = prisma): Promise<RepositoryListResult<ChallanDto>> {
+  async list(query: ChallanListQuery, tenantId: string, client: any = prisma): Promise<RepositoryListResult<ChallanDto>> {
     const listQuery = createListQuery(query, [...challanSearchableFields]);
     const searchWhere = buildSearchWhere([...challanSearchableFields], query.search);
 
     const where: Prisma.ChallanWhereInput = {
+      tenantId,
       deletedAt: null,
       ...(query.status ? { status: query.status } : {}),
       ...(query.partyId ? { partyId: query.partyId } : {}),
@@ -252,25 +253,27 @@ export class ChallansRepository {
     };
   }
 
-  async findById(id: string, client: any = prisma): Promise<ChallanDto | null> {
+  async findById(id: string, tenantId: string, client: any = prisma): Promise<ChallanDto | null> {
     const row = await client.challan.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: challanSelect
     });
 
     return row ? toChallanDto(row) : null;
   }
 
-  async softDelete(id: string, client: any = prisma): Promise<void> {
+  async softDelete(id: string, tenantId: string, client: any = prisma): Promise<void> {
+    const existing = await client.challan.findFirst({ where: { id, tenantId } });
+    if (!existing) return;
     await client.challan.update({
       where: { id },
       data: { deletedAt: new Date() }
     });
   }
 
-  async nextSequence(seriesCode: string, fiscalYear: string, client: any = prisma): Promise<number> {
+  async nextSequence(seriesCode: string, fiscalYear: string, tenantId: string, client: any = prisma): Promise<number> {
     const row = await client.challan.findFirst({
-      where: { seriesCode, fiscalYear },
+      where: { seriesCode, fiscalYear, tenantId },
       orderBy: { sequenceNumber: "desc" },
       select: { sequenceNumber: true }
     });
@@ -278,9 +281,9 @@ export class ChallansRepository {
     return (row?.sequenceNumber ?? 0) + 1;
   }
 
-  async numberExists(seriesCode: string, sequenceNumber: number, fiscalYear: string, client: any = prisma): Promise<boolean> {
+  async numberExists(seriesCode: string, sequenceNumber: number, fiscalYear: string, tenantId: string, client: any = prisma): Promise<boolean> {
     const row = await client.challan.findFirst({
-      where: { seriesCode, sequenceNumber, fiscalYear, deletedAt: null },
+      where: { seriesCode, sequenceNumber, fiscalYear, tenantId, deletedAt: null },
       select: { id: true }
     });
 

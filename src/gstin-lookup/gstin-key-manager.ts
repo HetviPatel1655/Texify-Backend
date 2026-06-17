@@ -9,36 +9,37 @@ const DB_KEY_API = "gstin_api_key";
 const DB_KEY_CALLS = "gstin_call_count";
 const DB_KEY_CREATED = "gstin_key_created_at";
 
-async function dbGet(key: string): Promise<string | null> {
+async function dbGet(tenantId: string, key: string): Promise<string | null> {
   try {
-    const row = await prisma.systemSetting.findUnique({ where: { key } });
+    const row = await prisma.systemSetting.findFirst({ where: { tenantId, key } });
     return row?.value ?? null;
   } catch {
     return null;
   }
 }
 
-async function dbSet(key: string, value: string): Promise<void> {
-  await prisma.systemSetting.upsert({
-    where: { key },
-    update: { value },
-    create: { key, value },
-  });
+async function dbSet(tenantId: string, key: string, value: string): Promise<void> {
+  const existing = await prisma.systemSetting.findFirst({ where: { tenantId, key } });
+  if (existing) {
+    await prisma.systemSetting.update({ where: { id: existing.id }, data: { value } });
+  } else {
+    await prisma.systemSetting.create({ data: { tenantId, key, value } });
+  }
 }
 
-async function getTrackerFromDb(): Promise<{ apiKey: string; callCount: number; createdAt: string } | null> {
-  const apiKey = await dbGet(DB_KEY_API);
+async function getTrackerFromDb(tenantId: string): Promise<{ apiKey: string; callCount: number; createdAt: string } | null> {
+  const apiKey = await dbGet(tenantId, DB_KEY_API);
   if (!apiKey) return null;
-  const callCount = parseInt(await dbGet(DB_KEY_CALLS) ?? "0", 10);
-  const createdAt = await dbGet(DB_KEY_CREATED) ?? new Date().toISOString();
+  const callCount = parseInt(await dbGet(tenantId, DB_KEY_CALLS) ?? "0", 10);
+  const createdAt = await dbGet(tenantId, DB_KEY_CREATED) ?? new Date().toISOString();
   return { apiKey, callCount, createdAt };
 }
 
-async function saveTrackerToDb(apiKey: string, callCount: number, createdAt: string): Promise<void> {
+async function saveTrackerToDb(tenantId: string, apiKey: string, callCount: number, createdAt: string): Promise<void> {
   await Promise.all([
-    dbSet(DB_KEY_API, apiKey),
-    dbSet(DB_KEY_CALLS, String(callCount)),
-    dbSet(DB_KEY_CREATED, createdAt),
+    dbSet(tenantId, DB_KEY_API, apiKey),
+    dbSet(tenantId, DB_KEY_CALLS, String(callCount)),
+    dbSet(tenantId, DB_KEY_CREATED, createdAt),
   ]);
 }
 
@@ -48,13 +49,13 @@ function isKeyValid(callCount: number, createdAt: string): boolean {
   return ageMs < MAX_DAYS * 24 * 60 * 60 * 1000;
 }
 
-export async function getValidApiKey(): Promise<string | null> {
-  let tracker = await getTrackerFromDb();
+export async function getValidApiKey(tenantId: string): Promise<string | null> {
+  let tracker = await getTrackerFromDb(tenantId);
 
   if (!tracker) {
     const envKey = env.GSTIN_API_KEY;
     if (envKey) {
-      await saveTrackerToDb(envKey, 0, new Date().toISOString());
+      await saveTrackerToDb(tenantId, envKey, 0, new Date().toISOString());
       return envKey;
     }
   }
@@ -66,7 +67,7 @@ export async function getValidApiKey(): Promise<string | null> {
   try {
     const newKey = await renewApiKey();
     const now = new Date().toISOString();
-    await saveTrackerToDb(newKey, 0, now);
+    await saveTrackerToDb(tenantId, newKey, 0, now);
     return newKey;
   } catch (err) {
     console.error("[gstin-key-manager] Auto-renewal failed:", err);
@@ -74,25 +75,25 @@ export async function getValidApiKey(): Promise<string | null> {
   }
 }
 
-export async function incrementCallCount(): Promise<void> {
-  const tracker = await getTrackerFromDb();
+export async function incrementCallCount(tenantId: string): Promise<void> {
+  const tracker = await getTrackerFromDb(tenantId);
   if (tracker) {
-    await dbSet(DB_KEY_CALLS, String(tracker.callCount + 1));
+    await dbSet(tenantId, DB_KEY_CALLS, String(tracker.callCount + 1));
   }
 }
 
-export async function setApiKey(apiKey: string): Promise<void> {
-  await saveTrackerToDb(apiKey, 0, new Date().toISOString());
+export async function setApiKey(tenantId: string, apiKey: string): Promise<void> {
+  await saveTrackerToDb(tenantId, apiKey, 0, new Date().toISOString());
 }
 
-export async function getKeyStatus(): Promise<{
+export async function getKeyStatus(tenantId: string): Promise<{
   callCount: number;
   maxCalls: number;
   createdAt: string;
   daysRemaining: number;
   isValid: boolean;
 } | null> {
-  const tracker = await getTrackerFromDb();
+  const tracker = await getTrackerFromDb(tenantId);
   if (!tracker) return null;
   const ageMs = Date.now() - new Date(tracker.createdAt).getTime();
   const daysUsed = ageMs / (24 * 60 * 60 * 1000);

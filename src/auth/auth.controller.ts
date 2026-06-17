@@ -5,9 +5,9 @@ import { AuthService } from "./auth.service";
 import { ApiResponse } from "../common/utils/apiResponse";
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
-  const user = await AuthService.register(req.body);
+  const result = await AuthService.register(req.body);
 
-  return ApiResponse.created(res, "User registered", { user });
+  return ApiResponse.created(res, "User registered", { user: result.user, tenantId: result.tenantId });
 });
 
 export const login = asyncHandler(async (req: Request, res: Response) => {

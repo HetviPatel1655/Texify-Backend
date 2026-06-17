@@ -12,17 +12,18 @@ const challansService = new ChallansService();
 const companyService = new CompanyProfileService();
 
 export async function downloadInvoicePdf(req: Request, res: Response) {
+  const { tenantId } = (req as any).user;
   const id = req.params.id as string;
   const [invoice, company] = await Promise.all([
-    invoicesService.getById(id),
-    companyService.get(),
+    invoicesService.getById(id, tenantId),
+    companyService.get(tenantId),
   ]);
 
   if (!invoice) throw new AppError("Invoice not found", 404);
 
   let challan = null;
   if (invoice.challanId) {
-    challan = await challansService.getById(invoice.challanId);
+    challan = await challansService.getById(invoice.challanId, tenantId);
   }
 
   const html = buildInvoiceHtml({
@@ -45,13 +46,14 @@ export async function downloadInvoicePdf(req: Request, res: Response) {
 }
 
 export async function downloadChallanPdf(req: Request, res: Response) {
+  const { tenantId } = (req as any).user;
   const id = req.params.id as string;
   const rowsPerColumn = parseInt(String(req.query.rowsPerColumn ?? "12"), 10) || 12;
   const duplicate = String(req.query.duplicate ?? "true") !== "false";
 
   const [challan, company] = await Promise.all([
-    challansService.getById(id),
-    companyService.get(),
+    challansService.getById(id, tenantId),
+    companyService.get(tenantId),
   ]);
 
   if (!challan) throw new AppError("Challan not found", 404);

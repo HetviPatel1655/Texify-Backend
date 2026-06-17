@@ -36,15 +36,15 @@ function toDto(row: Prisma.CompanyProfileGetPayload<object>): CompanyProfileDto 
 }
 
 export class CompanyProfileService {
-  async get(): Promise<CompanyProfileDto | null> {
-    const row = await prisma.companyProfile.findFirst();
+  async get(tenantId: string): Promise<CompanyProfileDto | null> {
+    const row = await prisma.companyProfile.findFirst({ where: { tenantId } });
     return row ? toDto(row) : null;
   }
 
-  async upsert(dto: UpsertCompanyProfileDto): Promise<CompanyProfileDto> {
-    const existing = await prisma.companyProfile.findFirst();
+  async upsert(dto: UpsertCompanyProfileDto, tenantId: string): Promise<CompanyProfileDto> {
+    const existing = await prisma.companyProfile.findFirst({ where: { tenantId } });
 
-    const data: Prisma.CompanyProfileCreateInput = {
+    const data: Prisma.CompanyProfileUpdateInput = {
       companyName: dto.companyName,
       tagline: dto.tagline ?? null,
       logoUrl: dto.logoUrl ?? null,
@@ -79,7 +79,12 @@ export class CompanyProfileService {
       return toDto(row);
     }
 
-    const row = await prisma.companyProfile.create({ data });
+    const row = await prisma.companyProfile.create({
+      data: {
+        ...data,
+        tenant: { connect: { id: tenantId } }
+      } as Prisma.CompanyProfileCreateInput
+    });
     return toDto(row);
   }
 }

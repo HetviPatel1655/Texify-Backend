@@ -236,22 +236,23 @@ function calculateInvoiceLines(items: InvoiceLineSource[], gstType: GSTType, dis
 export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoiceDto, UpdateInvoiceDto, InvoiceListQuery> {
   constructor(private readonly invoicesRepository = new InvoicesRepository()) {}
 
-  async list(query: InvoiceListQuery): Promise<RepositoryListResult<InvoiceDto>> {
-    return this.invoicesRepository.list(query);
+  async list(query: InvoiceListQuery, tenantId: string): Promise<RepositoryListResult<InvoiceDto>> {
+    return this.invoicesRepository.list(query, tenantId);
   }
 
-  async getById(id: string): Promise<InvoiceDto | null> {
-    return this.invoicesRepository.findById(id);
+  async getById(id: string, tenantId: string): Promise<InvoiceDto | null> {
+    return this.invoicesRepository.findById(id, tenantId);
   }
 
-  async getNextNumber(): Promise<string> {
+  async getNextNumber(tenantId: string): Promise<string> {
     const fiscalYear = fiscalYearFromDate(new Date());
     const seriesCode = "INV";
-    const sequenceNumber = await this.invoicesRepository.nextSequence(seriesCode, fiscalYear);
+    const sequenceNumber = await this.invoicesRepository.nextSequence(seriesCode, fiscalYear, tenantId);
     return buildInvoiceNumber(seriesCode, sequenceNumber, fiscalYear);
   }
 
-  async create(dto: CreateInvoiceDto, context?: CrudContext): Promise<CreateResult<InvoiceDto>> {
+  async create(dto: CreateInvoiceDto, context: CrudContext): Promise<CreateResult<InvoiceDto>> {
+    const tenantId = context.tenantId;
     return prisma.$transaction(async (tx) => {
       const db = tx as any;
       const issueDate = dto.invoiceDate ?? new Date();
@@ -259,13 +260,13 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
       const seriesCode = "INV";
       const discountAmount = new Prisma.Decimal(dto.discount ?? 0);
 
-      const party = await db.party.findFirst({ where: { id: dto.partyId, deletedAt: null, isActive: true }, select: { id: true } });
+      const party = await db.party.findFirst({ where: { id: dto.partyId, tenantId, deletedAt: null, isActive: true }, select: { id: true } });
       if (!party) {
         throw new AppError("Party not found", 404);
       }
 
       if (dto.challanId) {
-        const challan = await db.challan.findFirst({ where: { id: dto.challanId, deletedAt: null }, select: { id: true } });
+        const challan = await db.challan.findFirst({ where: { id: dto.challanId, tenantId, deletedAt: null }, select: { id: true } });
         if (!challan) {
           throw new AppError("Referenced challan not found", 404);
         }
@@ -273,7 +274,7 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
 
       const productIds = [...new Set(dto.items.map((item) => item.productId))];
       const products = (await db.product.findMany({
-        where: { id: { in: productIds }, deletedAt: null, isActive: true },
+        where: { id: { in: productIds }, tenantId, deletedAt: null, isActive: true },
         select: { id: true, name: true, hsnCode: true, unitType: true, gstRate: true }
       })) as Array<{ id: string; name: string; hsnCode: string | null; unitType: string; gstRate: Prisma.Decimal }>;
 
@@ -290,13 +291,13 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
 
       let sequenceNumber: number;
       if (dto.sequenceNumber) {
-        const exists = await this.invoicesRepository.numberExists(seriesCode, dto.sequenceNumber, fiscalYear, db);
+        const exists = await this.invoicesRepository.numberExists(seriesCode, dto.sequenceNumber, fiscalYear, tenantId, db);
         if (exists) {
           throw new AppError(`Invoice number ${buildInvoiceNumber(seriesCode, dto.sequenceNumber, fiscalYear)} already exists`, 409);
         }
         sequenceNumber = dto.sequenceNumber;
       } else {
-        sequenceNumber = await this.invoicesRepository.nextSequence(seriesCode, fiscalYear, db);
+        sequenceNumber = await this.invoicesRepository.nextSequence(seriesCode, fiscalYear, tenantId, db);
       }
       const invoiceNumber = buildInvoiceNumber(seriesCode, sequenceNumber, fiscalYear);
 
@@ -308,6 +309,7 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
 
       const invoice = await db.invoice.create({
         data: {
+          tenant: { connect: { id: tenantId } },
           invoiceNumber,
           seriesCode,
           sequenceNumber,
@@ -359,12 +361,13 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
     });
   }
 
-  async update(id: string, dto: UpdateInvoiceDto, context?: CrudContext): Promise<UpdateResult<InvoiceDto>> {
+  async update(id: string, dto: UpdateInvoiceDto, context: CrudContext): Promise<UpdateResult<InvoiceDto>> {
+    const tenantId = context.tenantId;
     return prisma.$transaction(async (tx) => {
       const db = tx as any;
 
       const existing = (await db.invoice.findFirst({
-        where: { id, deletedAt: null },
+        where: { id, tenantId, deletedAt: null },
         select: invoiceDetailSelect
       })) as ExistingInvoiceRow | null;
 
@@ -378,13 +381,13 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
       const discountAmount = new Prisma.Decimal(dto.discount ?? existing.discountAmount);
       const placeOfSupply = dto.placeOfSupply !== undefined ? dto.placeOfSupply : existing.placeOfSupply;
 
-      const party = await db.party.findFirst({ where: { id: partyId, deletedAt: null, isActive: true }, select: { id: true } });
+      const party = await db.party.findFirst({ where: { id: partyId, tenantId, deletedAt: null, isActive: true }, select: { id: true } });
       if (!party) {
         throw new AppError("Party not found", 404);
       }
 
       if (dto.challanId) {
-        const challan = await db.challan.findFirst({ where: { id: dto.challanId, deletedAt: null }, select: { id: true } });
+        const challan = await db.challan.findFirst({ where: { id: dto.challanId, tenantId, deletedAt: null }, select: { id: true } });
         if (!challan) {
           throw new AppError("Referenced challan not found", 404);
         }
@@ -399,7 +402,7 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
               dto.items,
               buildProductMap(
                 (await db.product.findMany({
-                  where: { id: { in: [...new Set(dto.items.map((item) => item.productId))] }, deletedAt: null, isActive: true },
+                  where: { id: { in: [...new Set(dto.items.map((item) => item.productId))] }, tenantId, deletedAt: null, isActive: true },
                   select: { id: true, name: true, hsnCode: true, unitType: true, gstRate: true }
                 })) as Array<{ id: string; name: string; hsnCode: string | null; unitType: string; gstRate: Prisma.Decimal }>
               )
@@ -478,13 +481,13 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
     });
   }
 
-  async remove(id: string): Promise<void> {
-    const existing = await this.invoicesRepository.findById(id);
+  async remove(id: string, context: CrudContext): Promise<void> {
+    const existing = await this.invoicesRepository.findById(id, context.tenantId);
 
     if (!existing) {
       throw new AppError("Invoice not found", 404);
     }
 
-    await this.invoicesRepository.softDelete(id);
+    await this.invoicesRepository.softDelete(id, context.tenantId);
   }
 }
