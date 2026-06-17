@@ -1,7 +1,6 @@
 FROM node:24-slim AS build
 
 WORKDIR /app
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 COPY package*.json ./
 RUN npm install
@@ -28,7 +27,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxrandr2 \
     && rm -rf /var/lib/apt/lists/*
 
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
