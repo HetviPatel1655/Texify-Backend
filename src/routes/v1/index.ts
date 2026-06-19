@@ -7,6 +7,8 @@ import { companyProfileRouter } from "../../company-profile/company-profile.rout
 import { gstinLookupRouter } from "../../gstin-lookup/gstin-lookup.routes";
 import { erpRouter } from "./erp.routes";
 import { pdfRouter } from "../../pdf/pdf.routes";
+import { subscriptionsRouter, subscriptionsWebhookRouter } from "../../subscriptions/subscriptions.routes";
+import { featureGateRouter } from "../../feature-gate/feature-gate.routes";
 
 const v1Router = Router();
 
@@ -17,5 +19,8 @@ v1Router.use("/company-profile", companyProfileRouter);
 v1Router.use("/gstin-lookup", gstinLookupRouter);
 v1Router.use("/erp", erpRouter);
 v1Router.use("/pdf", pdfRouter);
+v1Router.use("/subscriptions", subscriptionsRouter);
+v1Router.use(subscriptionsWebhookRouter);
+v1Router.use("/plan", featureGateRouter);
 
 export { v1Router };

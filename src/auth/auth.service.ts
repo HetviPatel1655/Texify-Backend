@@ -1,9 +1,11 @@
+import crypto from "crypto";
 import bcrypt from "bcrypt";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 
 import { prisma } from "../lib/prisma";
 import { env } from "../config";
 import { AppError } from "../common/errors/appError";
+import { EmailService } from "../common/services/email.service";
 
 export const AuthService = {
   async register(input: { name: string; email: string; password: string; companyName: string; role?: string }) {
@@ -116,5 +118,62 @@ export const AuthService = {
     );
 
     return { accessToken, refreshToken: newRefreshToken };
-  }
+  },
+
+  async forgotPassword(input: { email: string }) {
+    const user = await prisma.user.findUnique({ where: { email: input.email } });
+    if (!user) return;
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetToken: hashedToken,
+        passwordResetExpiry: new Date(Date.now() + 60 * 60 * 1000),
+      },
+    });
+
+    await EmailService.sendPasswordResetEmail(user.email, token);
+  },
+
+  async resetPassword(input: { token: string; newPassword: string }) {
+    const hashedToken = crypto.createHash("sha256").update(input.token).digest("hex");
+
+    const user = await prisma.user.findFirst({
+      where: {
+        passwordResetToken: hashedToken,
+        passwordResetExpiry: { gt: new Date() },
+      },
+    });
+
+    if (!user) throw new AppError("Invalid or expired reset token", 400);
+
+    const hashed = await bcrypt.hash(input.newPassword, 12);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashed,
+        passwordResetToken: null,
+        passwordResetExpiry: null,
+      },
+    });
+  },
+
+  async changePassword(input: { userId: string; currentPassword: string; newPassword: string }) {
+    const user = await prisma.user.findUnique({ where: { id: input.userId } });
+    if (!user) throw new AppError("User not found", 404);
+
+    const ok = await bcrypt.compare(input.currentPassword, user.password);
+    if (!ok) throw new AppError("Current password is incorrect", 401);
+
+    const hashed = await bcrypt.hash(input.newPassword, 12);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashed },
+    });
+  },
 };

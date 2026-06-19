@@ -27,3 +27,19 @@ export const refresh = asyncHandler(async (req: Request, res: Response) => {
 
   return ApiResponse.ok(res, "Token refreshed", tokens);
 });
+
+export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+  await AuthService.forgotPassword(req.body);
+  return ApiResponse.ok(res, "If that email exists, a reset link has been sent");
+});
+
+export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+  await AuthService.resetPassword(req.body);
+  return ApiResponse.ok(res, "Password reset successful");
+});
+
+export const changePassword = asyncHandler(async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  await AuthService.changePassword({ userId: user.id, ...req.body });
+  return ApiResponse.ok(res, "Password changed successfully");
+});

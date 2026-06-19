@@ -12,7 +12,14 @@ const app = express();
 app.disable("x-powered-by");
 app.use(helmet());
 app.use(cors());
-app.use(express.json({ limit: "5mb" }));
+app.use(express.json({
+  limit: "5mb",
+  verify: (req: any, _res, buf) => {
+    if (req.originalUrl?.includes("/subscriptions/webhook")) {
+      req.rawBody = buf.toString();
+    }
+  },
+}));
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 
