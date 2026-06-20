@@ -8,6 +8,26 @@ import { AppError } from "../common/errors/appError";
 import { EmailService } from "../common/services/email.service";
 
 export const AuthService = {
+  async getProfile(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, role: true, createdAt: true },
+    });
+    if (!user) throw new AppError("User not found", 404);
+
+    const tenantUser = await prisma.tenantUser.findFirst({
+      where: { userId },
+      select: { tenantId: true, role: true, tenant: { select: { name: true } } },
+    });
+
+    return {
+      ...user,
+      tenantId: tenantUser?.tenantId ?? null,
+      tenantRole: tenantUser?.role ?? null,
+      companyName: tenantUser?.tenant?.name ?? null,
+    };
+  },
+
   async register(input: { name: string; email: string; password: string; companyName: string; role?: string }) {
     const existing = await prisma.user.findUnique({ where: { email: input.email } });
 

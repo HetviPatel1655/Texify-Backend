@@ -17,7 +17,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const me = asyncHandler(async (req: Request, res: Response) => {
-  const user = (req as any).user;
+  const reqUser = (req as any).user;
+  const user = await AuthService.getProfile(reqUser.id);
 
   return ApiResponse.ok(res, "Current user", { user });
 });

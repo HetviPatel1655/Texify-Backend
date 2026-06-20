@@ -50,7 +50,7 @@ async function getActivePlan(tenantId: string): Promise<string | null> {
     select: { status: true, planName: true },
   });
 
-  if (sub && sub.status === "ACTIVE") return sub.planName;
+  if (sub && (sub.status === "ACTIVE" || sub.status === "AUTHENTICATED")) return sub.planName;
   return null;
 }
 
