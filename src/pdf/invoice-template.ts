@@ -35,6 +35,7 @@ export interface InvoicePdfData {
     interestRate: string | null;
     subtotal: string;
     discountAmount: string;
+    freightCharges: string;
     taxableAmount: string;
     sgstRate: string;
     sgstAmount: string;
@@ -123,6 +124,7 @@ export function buildInvoiceHtml(data: InvoicePdfData): string {
   const hasCgst = parseFloat(inv.cgstAmount) > 0;
   const hasIgst = parseFloat(inv.igstAmount) > 0;
   const hasDiscount = parseFloat(inv.discountAmount) > 0;
+  const hasFreight = parseFloat(inv.freightCharges) > 0;
   const amountRowSpan = 1 + ((hasSgst || hasCgst) ? 1 : 0) + (hasIgst ? 1 : 0);
 
   const bd = "1.7px solid #000";
@@ -308,9 +310,9 @@ ${itemRows}
   <td style="border-right:${bd}"></td><td style="border-right:${bd}"></td><td style="border-right:${bd}"></td><td></td>
 </tr>
 
-<!-- BANK + GROSS / DISCOUNT -->
+<!-- BANK + GROSS / DISCOUNT / FREIGHT -->
 <tr>
-  <td colspan="3" rowspan="2" style="border-top:${bd};border-right:${bd};padding:4px 8px;font-size:${font};line-height:1.6;vertical-align:top">
+  <td colspan="3" rowspan="${hasFreight ? 3 : 2}" style="border-top:${bd};border-right:${bd};padding:4px 8px;font-size:${font};line-height:1.6;vertical-align:top">
     <div><b>Bank Name :</b>&ensp;${esc(bankName)}</div>
     <div><b>A/C No :</b>&ensp;${esc(bankAccountNo)}</div>
     <div><b>IFSC :</b>&ensp;${esc(bankIfsc)}</div>
@@ -320,9 +322,13 @@ ${itemRows}
   <td style="border-top:${bd};padding:3px 8px 3px 4px;font-size:${font};text-align:right">${fmtNum(inv.subtotal)}</td>
 </tr>
 <tr>
-  <td colspan="3" style="border-bottom:${bd};border-right:${bd};padding:3px 4px 3px 8px;font-size:${font}">${hasDiscount ? "Discount" : " "}</td>
-  <td style="border-bottom:${bd};padding:3px 8px 3px 4px;font-size:${font};text-align:right">${hasDiscount ? `-${fmtNum(inv.discountAmount)}` : " "}</td>
+  <td colspan="3" style="${hasFreight ? "" : `border-bottom:${bd};`}border-right:${bd};padding:3px 4px 3px 8px;font-size:${font}">${hasDiscount ? "Discount" : " "}</td>
+  <td style="${hasFreight ? "" : `border-bottom:${bd};`}padding:3px 8px 3px 4px;font-size:${font};text-align:right">${hasDiscount ? `-${fmtNum(inv.discountAmount)}` : " "}</td>
 </tr>
+${hasFreight ? `<tr>
+  <td colspan="3" style="border-bottom:${bd};border-right:${bd};padding:3px 4px 3px 8px;font-size:${font}">Freight Charges</td>
+  <td style="border-bottom:${bd};padding:3px 8px 3px 4px;font-size:${font};text-align:right">+${fmtNum(inv.freightCharges)}</td>
+</tr>` : ""}
 
 <!-- AMOUNT IN WORDS + TAXABLE / GST -->
 <tr>

@@ -124,7 +124,7 @@ function resolveGstSplit(gstType: GSTType, placeOfSupply: string | null | undefi
   return { isInterState, halfRate: new Prisma.Decimal(0), sgstRate: new Prisma.Decimal(0), cgstRate: new Prisma.Decimal(0), igstRate: new Prisma.Decimal(0) };
 }
 
-function calculateInvoiceLines(items: InvoiceLineSource[], gstType: GSTType, discountAmount: Prisma.Decimal, placeOfSupply: string | null | undefined) {
+function calculateInvoiceLines(items: InvoiceLineSource[], gstType: GSTType, discountAmount: Prisma.Decimal, freightCharges: Prisma.Decimal, placeOfSupply: string | null | undefined) {
   const gstSplit = resolveGstSplit(gstType, placeOfSupply);
 
   const lineAmounts = items.map((item) => ({
@@ -182,13 +182,17 @@ function calculateInvoiceLines(items: InvoiceLineSource[], gstType: GSTType, dis
     };
   });
 
-  const taxableAmountTotal = calculatedLines.reduce((acc, line) => acc.add(line.taxableAmount), new Prisma.Decimal(0));
-  const gstAmountTotal = calculatedLines.reduce((acc, line) => acc.add(line.gstAmount), new Prisma.Decimal(0));
-  const grandTotal = calculatedLines.reduce((acc, line) => acc.add(line.grandTotal), new Prisma.Decimal(0));
+  const itemsTaxableTotal = calculatedLines.reduce((acc, line) => acc.add(line.taxableAmount), new Prisma.Decimal(0));
+  const taxableAmountTotal = roundMoney(itemsTaxableTotal.add(freightCharges));
 
   // Determine the effective GST rate from items (use first item's rate as the invoice-level display rate)
   const effectiveGstRate = calculatedLines.length > 0 && isTaxableGstType(gstType)
     ? items[0].product.gstRate
+    : new Prisma.Decimal(0);
+
+  // GST is computed on total taxable amount (items + freight)
+  const gstAmountTotal = isTaxableGstType(gstType)
+    ? roundMoney(taxableAmountTotal.mul(effectiveGstRate).div(100))
     : new Prisma.Decimal(0);
 
   let sgstRate = new Prisma.Decimal(0);
@@ -203,7 +207,6 @@ function calculateInvoiceLines(items: InvoiceLineSource[], gstType: GSTType, dis
       igstRate = effectiveGstRate;
       igstAmount = roundMoney(gstAmountTotal);
     } else {
-      // Intra-state: split 50/50 into SGST + CGST
       const halfRate = roundMoney(effectiveGstRate.div(2));
       sgstRate = halfRate;
       cgstRate = halfRate;
@@ -218,8 +221,9 @@ function calculateInvoiceLines(items: InvoiceLineSource[], gstType: GSTType, dis
 
   return {
     invoiceDiscount,
+    freightCharges,
     subtotal: roundMoney(subtotalTotal),
-    taxableAmount: roundMoney(taxableAmountTotal),
+    taxableAmount: taxableAmountTotal,
     gstAmount: roundMoney(gstAmountTotal),
     sgstRate,
     sgstAmount,
@@ -259,6 +263,7 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
       const fiscalYear = fiscalYearFromDate(issueDate);
       const seriesCode = "INV";
       const discountAmount = new Prisma.Decimal(dto.discount ?? 0);
+      const freightCharges = new Prisma.Decimal(dto.freightCharges ?? 0);
 
       const party = await db.party.findFirst({ where: { id: dto.partyId, tenantId, deletedAt: null, isActive: true }, select: { id: true } });
       if (!party) {
@@ -286,6 +291,7 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
         buildSourcesFromCreateItems(dto.items, buildProductMap(products)),
         dto.gstType,
         discountAmount,
+        freightCharges,
         dto.placeOfSupply
       );
 
@@ -340,6 +346,7 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
           updatedBy: context?.actorId ? { connect: { id: context.actorId } } : undefined,
           subtotal: calculations.subtotal,
           discountAmount: calculations.invoiceDiscount,
+          freightCharges: calculations.freightCharges,
           taxableAmount: calculations.taxableAmount,
           gstAmount: calculations.gstAmount,
           sgstRate: calculations.sgstRate,
@@ -379,6 +386,7 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
       const gstType = dto.gstType ?? existing.gstType;
       const partyId = dto.partyId ?? existing.partyId;
       const discountAmount = new Prisma.Decimal(dto.discount ?? existing.discountAmount);
+      const freightAmount = new Prisma.Decimal(dto.freightCharges ?? existing.freightCharges);
       const placeOfSupply = dto.placeOfSupply !== undefined ? dto.placeOfSupply : existing.placeOfSupply;
 
       const party = await db.party.findFirst({ where: { id: partyId, tenantId, deletedAt: null, isActive: true }, select: { id: true } });
@@ -393,7 +401,7 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
         }
       }
 
-      const shouldRecalculate = dto.items !== undefined || dto.discount !== undefined || dto.gstType !== undefined || dto.placeOfSupply !== undefined;
+      const shouldRecalculate = dto.items !== undefined || dto.discount !== undefined || dto.freightCharges !== undefined || dto.gstType !== undefined || dto.placeOfSupply !== undefined;
       let calculations: ReturnType<typeof calculateInvoiceLines> | null = null;
 
       if (shouldRecalculate) {
@@ -409,7 +417,7 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
             )
           : buildSourcesFromExistingItems(existing.items);
 
-        calculations = calculateInvoiceLines(lineSources, gstType, discountAmount, placeOfSupply);
+        calculations = calculateInvoiceLines(lineSources, gstType, discountAmount, freightAmount, placeOfSupply);
 
         await db.invoiceItem.deleteMany({ where: { invoiceId: id } });
       }
@@ -459,6 +467,7 @@ export class InvoicesService implements BaseCrudService<InvoiceDto, CreateInvoic
             ? {
                 subtotal: calculations.subtotal,
                 discountAmount: calculations.invoiceDiscount,
+                freightCharges: calculations.freightCharges,
                 taxableAmount: calculations.taxableAmount,
                 gstAmount: calculations.gstAmount,
                 sgstRate: calculations.sgstRate,

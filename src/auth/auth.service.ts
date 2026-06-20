@@ -121,6 +121,10 @@ export const AuthService = {
   },
 
   async forgotPassword(input: { email: string }) {
+    if (!env.SMTP_USER || !env.SMTP_PASS) {
+      throw new AppError("Password reset is not available at this time. Please contact the administrator.", 503);
+    }
+
     const user = await prisma.user.findUnique({ where: { email: input.email } });
     if (!user) return;
 

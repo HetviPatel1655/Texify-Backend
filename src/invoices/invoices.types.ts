@@ -89,6 +89,7 @@ export interface InvoiceDto {
   cgstAmount: string;
   igstRate: string;
   igstAmount: string;
+  freightCharges: string;
   roundOff: string;
   grandTotal: string;
   paidAmount: string;
@@ -119,6 +120,7 @@ export interface CreateInvoiceDto {
   invoiceDate?: Date;
   gstType: GSTType;
   discount?: number;
+  freightCharges?: number;
   dueDate?: Date | null;
   dueDays?: number | null;
   orderNo?: string | null;
@@ -146,6 +148,7 @@ export interface UpdateInvoiceDto {
   invoiceDate?: Date;
   gstType?: GSTType;
   discount?: number;
+  freightCharges?: number;
   status?: InvoiceStatus;
   paymentStatus?: PaymentStatus;
   dueDate?: Date | null;
