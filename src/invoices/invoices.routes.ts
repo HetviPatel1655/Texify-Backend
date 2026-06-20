@@ -6,6 +6,7 @@ import { validateQuery } from "../common/middleware/validateQuery";
 import { featureGate } from "../feature-gate/feature-gate.middleware";
 import { createInvoiceSchema, listInvoiceQuerySchema, updateInvoiceSchema } from "./invoices.validators";
 import { createInvoice, deleteInvoice, getInvoiceById, getNextInvoiceNumber, listInvoices, updateInvoice } from "./invoices.controller";
+import { paymentsRouter } from "../payments/payments.routes";
 
 const router = Router();
 
@@ -17,5 +18,7 @@ router.get("/:id", getInvoiceById);
 router.post("/", featureGate("invoices:create"), validateBody(createInvoiceSchema), createInvoice);
 router.patch("/:id", validateBody(updateInvoiceSchema), updateInvoice);
 router.delete("/:id", deleteInvoice);
+
+router.use("/:invoiceId/payments", paymentsRouter);
 
 export { router as invoicesRouter };
