@@ -5,6 +5,7 @@ export const PaymentStatuses = ["UNPAID", "PARTIAL", "PAID", "REFUNDED"] as cons
 export const UnitTypes = ["PIECE", "KILOGRAM", "METER", "LITER", "ROLL", "SET", "BOX", "DOZEN", "TAKA"] as const;
 export const GSTTypes = ["TAXABLE", "EXEMPT", "NIL", "RCM"] as const;
 export const DocumentTypes = ["INVOICE", "CHALLAN"] as const;
+export const ChallanTypes = ["SALE", "GREY", "FINISHED_TAKA", "DIRECT", "SAREES", "BEAM", "YARN_SALE"] as const;
 
 export type PartyType = (typeof PartyTypes)[number];
 export type InvoiceStatus = (typeof InvoiceStatuses)[number];

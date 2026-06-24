@@ -6,6 +6,7 @@ import { ApiResponse } from "../common/utils/apiResponse";
 import { AppError } from "../common/errors/appError";
 import { parseListQuery, toOptionalString } from "../common/utils/query";
 import { ChallansService } from "./challans.service";
+import type { ChallanType } from "./challans.constants";
 
 const challansService = new ChallansService();
 const idSchema = z.string().uuid();
@@ -17,7 +18,8 @@ export const listChallans = asyncHandler(async (req: Request, res: Response) => 
   const result = await challansService.list({
     ...parsedQuery,
     status: toOptionalString(req.query.status) as never,
-    partyId: toOptionalString(req.query.partyId)
+    partyId: toOptionalString(req.query.partyId),
+    challanType: toOptionalString(req.query.challanType) as ChallanType | undefined
   }, tenantId);
 
   return ApiResponse.ok(res, "Challans retrieved", result);
@@ -35,7 +37,8 @@ export const getChallanById = asyncHandler(async (req: Request, res: Response) =
 
 export const getNextChallanNumber = asyncHandler(async (req: Request, res: Response) => {
   const { tenantId } = (req as any).user;
-  const nextNumber = await challansService.getNextNumber(tenantId);
+  const challanType = (toOptionalString(req.query.challanType) as ChallanType) || "SALE";
+  const nextNumber = await challansService.getNextNumber(tenantId, challanType);
   return ApiResponse.ok(res, "Next challan number", { nextNumber });
 });
 

@@ -4,7 +4,10 @@ import { prisma } from "../lib/prisma";
 import { createListQuery, type RepositoryListResult } from "../common/repositories/base.repository";
 import { buildSearchWhere } from "../common/utils/query";
 import { formatDecimalValue } from "../common/utils/decimal";
-import type { ChallanDto, ChallanItemDto, ChallanListQuery, ChallanPartyDto, ChallanRollEntryDto } from "./challans.types";
+import type {
+  ChallanDto, ChallanItemDto, ChallanListQuery, ChallanPartyDto, ChallanRollEntryDto,
+  ChallanTakaEntryDto, ChallanBeamEntryDto, ChallanYarnEntryDto
+} from "./challans.types";
 import { challanSearchableFields } from "./challans.constants";
 
 const challanPartySelect = {
@@ -31,6 +34,7 @@ const challanPartySelect = {
 const challanSelect = {
   id: true,
   documentType: true,
+  challanType: true,
   challanNumber: true,
   seriesCode: true,
   sequenceNumber: true,
@@ -53,8 +57,18 @@ const challanSelect = {
   deliveryPostalCode: true,
   deliveryGstin: true,
   deliveryPhone: true,
+  designNo: true,
+  dubbleNo: true,
+  mobileNo: true,
+  insideNo: true,
+  dripNo: true,
+  goodsRate: true,
+  goodsAmount: true,
+  totalPcs: true,
+  totalCartons: true,
   totalTakas: true,
   totalMeters: true,
+  totalWeight: true,
   subtotal: true,
   discountAmount: true,
   gstAmount: true,
@@ -100,6 +114,63 @@ const challanSelect = {
         },
         orderBy: { serialNumber: "asc" as const }
       }
+    },
+    orderBy: { sortOrder: "asc" as const }
+  },
+  takaEntries: {
+    select: {
+      id: true,
+      takaId: true,
+      takaNo: true,
+      itemName: true,
+      loomNo: true,
+      meters: true,
+      weight: true,
+      grade: true,
+      designNo: true,
+      shadeName: true,
+      cut: true,
+      sarees: true,
+      sortOrder: true
+    },
+    orderBy: { sortOrder: "asc" as const }
+  },
+  beamEntries: {
+    select: {
+      id: true,
+      beamId: true,
+      beamNo: true,
+      beamPosNo: true,
+      yarnName: true,
+      lotNo: true,
+      ends: true,
+      meters: true,
+      grossWt: true,
+      tareWt: true,
+      netWt: true,
+      pootha: true,
+      remarks: true,
+      sortOrder: true
+    },
+    orderBy: { sortOrder: "asc" as const }
+  },
+  yarnEntries: {
+    select: {
+      id: true,
+      yarnPurchaseItemId: true,
+      cartonNo: true,
+      itemName: true,
+      shadeName: true,
+      lotNo: true,
+      denier: true,
+      twist: true,
+      twistDirection: true,
+      cheese: true,
+      grossWt: true,
+      tareWt: true,
+      netWt: true,
+      remarks: true,
+      sortOrder: true
     },
     orderBy: { sortOrder: "asc" as const }
   }
@@ -167,10 +238,68 @@ function toItemDto(item: ChallanRow["items"][number]): ChallanItemDto {
   };
 }
 
+function toTakaEntryDto(entry: ChallanRow["takaEntries"][number]): ChallanTakaEntryDto {
+  return {
+    id: entry.id,
+    takaId: entry.takaId,
+    takaNo: entry.takaNo,
+    itemName: entry.itemName,
+    loomNo: entry.loomNo,
+    meters: formatDecimalValue(entry.meters),
+    weight: formatDecimalValue(entry.weight),
+    grade: entry.grade,
+    designNo: entry.designNo,
+    shadeName: entry.shadeName,
+    cut: entry.cut,
+    sarees: entry.sarees,
+    sortOrder: entry.sortOrder
+  };
+}
+
+function toBeamEntryDto(entry: ChallanRow["beamEntries"][number]): ChallanBeamEntryDto {
+  return {
+    id: entry.id,
+    beamId: entry.beamId,
+    beamNo: entry.beamNo,
+    beamPosNo: entry.beamPosNo,
+    yarnName: entry.yarnName,
+    lotNo: entry.lotNo,
+    ends: entry.ends,
+    meters: formatDecimalValue(entry.meters),
+    grossWt: formatDecimalValue(entry.grossWt),
+    tareWt: formatDecimalValue(entry.tareWt),
+    netWt: formatDecimalValue(entry.netWt),
+    pootha: formatDecimalValue(entry.pootha),
+    remarks: entry.remarks,
+    sortOrder: entry.sortOrder
+  };
+}
+
+function toYarnEntryDto(entry: ChallanRow["yarnEntries"][number]): ChallanYarnEntryDto {
+  return {
+    id: entry.id,
+    yarnPurchaseItemId: entry.yarnPurchaseItemId,
+    cartonNo: entry.cartonNo,
+    itemName: entry.itemName,
+    shadeName: entry.shadeName,
+    lotNo: entry.lotNo,
+    denier: entry.denier,
+    twist: entry.twist,
+    twistDirection: entry.twistDirection,
+    cheese: formatDecimalValue(entry.cheese),
+    grossWt: formatDecimalValue(entry.grossWt),
+    tareWt: formatDecimalValue(entry.tareWt),
+    netWt: formatDecimalValue(entry.netWt),
+    remarks: entry.remarks,
+    sortOrder: entry.sortOrder
+  };
+}
+
 function toChallanDto(row: ChallanRow): ChallanDto {
   return {
     id: row.id,
     documentType: row.documentType,
+    challanType: row.challanType,
     challanNumber: row.challanNumber,
     seriesCode: row.seriesCode,
     sequenceNumber: row.sequenceNumber,
@@ -193,8 +322,18 @@ function toChallanDto(row: ChallanRow): ChallanDto {
     deliveryPostalCode: row.deliveryPostalCode,
     deliveryGstin: row.deliveryGstin,
     deliveryPhone: row.deliveryPhone,
+    designNo: row.designNo,
+    dubbleNo: row.dubbleNo,
+    mobileNo: row.mobileNo,
+    insideNo: row.insideNo,
+    dripNo: row.dripNo,
+    goodsRate: formatDecimalValue(row.goodsRate),
+    goodsAmount: formatDecimalValue(row.goodsAmount),
+    totalPcs: row.totalPcs,
+    totalCartons: row.totalCartons,
     totalTakas: row.totalTakas,
     totalMeters: formatDecimalValue(row.totalMeters),
+    totalWeight: formatDecimalValue(row.totalWeight),
     subtotal: formatDecimalValue(row.subtotal),
     discountAmount: formatDecimalValue(row.discountAmount),
     gstAmount: formatDecimalValue(row.gstAmount),
@@ -206,7 +345,10 @@ function toChallanDto(row: ChallanRow): ChallanDto {
     createdById: row.createdById,
     updatedById: row.updatedById,
     party: toPartyDto(row.party),
-    items: row.items.map(toItemDto)
+    items: row.items.map(toItemDto),
+    takaEntries: row.takaEntries.map(toTakaEntryDto),
+    beamEntries: row.beamEntries.map(toBeamEntryDto),
+    yarnEntries: row.yarnEntries.map(toYarnEntryDto)
   };
 }
 
@@ -220,6 +362,7 @@ export class ChallansRepository {
       deletedAt: null,
       ...(query.status ? { status: query.status } : {}),
       ...(query.partyId ? { partyId: query.partyId } : {}),
+      ...(query.challanType ? { challanType: query.challanType } : {}),
       ...(query.fromDate || query.toDate
         ? {
             issueDate: {

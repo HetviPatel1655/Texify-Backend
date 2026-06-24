@@ -1,4 +1,5 @@
 import type { ChallanStatus, DocumentType, PartyType } from "../common/constants/erp";
+import type { ChallanType } from "./challans.constants";
 import type { ListQuery } from "../common/types/query";
 
 export interface ChallanRollEntryDto {
@@ -56,9 +57,61 @@ export interface ChallanPartyDto {
   shippingPostalCode: string | null;
 }
 
+export interface ChallanTakaEntryDto {
+  id: string;
+  takaId: string;
+  takaNo: string;
+  itemName: string | null;
+  loomNo: string | null;
+  meters: string;
+  weight: string;
+  grade: string | null;
+  designNo: string | null;
+  shadeName: string | null;
+  cut: string | null;
+  sarees: number;
+  sortOrder: number;
+}
+
+export interface ChallanBeamEntryDto {
+  id: string;
+  beamId: string;
+  beamNo: string;
+  beamPosNo: string | null;
+  yarnName: string | null;
+  lotNo: string | null;
+  ends: number;
+  meters: string;
+  grossWt: string;
+  tareWt: string;
+  netWt: string;
+  pootha: string;
+  remarks: string | null;
+  sortOrder: number;
+}
+
+export interface ChallanYarnEntryDto {
+  id: string;
+  yarnPurchaseItemId: string;
+  cartonNo: string;
+  itemName: string;
+  shadeName: string | null;
+  lotNo: string | null;
+  denier: string | null;
+  twist: string | null;
+  twistDirection: string | null;
+  cheese: string;
+  grossWt: string;
+  tareWt: string;
+  netWt: string;
+  remarks: string | null;
+  sortOrder: number;
+}
+
 export interface ChallanDto {
   id: string;
   documentType: DocumentType;
+  challanType: ChallanType;
   challanNumber: string;
   seriesCode: string;
   sequenceNumber: number;
@@ -81,8 +134,18 @@ export interface ChallanDto {
   deliveryPostalCode: string | null;
   deliveryGstin: string | null;
   deliveryPhone: string | null;
+  designNo: string | null;
+  dubbleNo: string | null;
+  mobileNo: string | null;
+  insideNo: string | null;
+  dripNo: string | null;
+  goodsRate: string;
+  goodsAmount: string;
+  totalPcs: number;
+  totalCartons: number;
   totalTakas: number;
   totalMeters: string;
+  totalWeight: string;
   subtotal: string;
   discountAmount: string;
   gstAmount: string;
@@ -95,6 +158,9 @@ export interface ChallanDto {
   updatedById: string | null;
   party: ChallanPartyDto | null;
   items: ChallanItemDto[];
+  takaEntries: ChallanTakaEntryDto[];
+  beamEntries: ChallanBeamEntryDto[];
+  yarnEntries: ChallanYarnEntryDto[];
 }
 
 export interface CreateRollEntryDto {
@@ -114,7 +180,23 @@ export interface CreateChallanItemDto {
   rollEntries?: CreateRollEntryDto[];
 }
 
+export interface CreateTakaEntryDto {
+  takaId: string;
+}
+
+export interface CreateBeamEntryDto {
+  beamId: string;
+  beamPosNo?: string;
+  remarks?: string;
+}
+
+export interface CreateYarnEntryDto {
+  yarnPurchaseItemId: string;
+  remarks?: string;
+}
+
 export interface CreateChallanDto {
+  challanType?: ChallanType;
   partyId: string;
   sequenceNumber?: number;
   issueDate?: Date;
@@ -133,7 +215,17 @@ export interface CreateChallanDto {
   deliveryPostalCode?: string | null;
   deliveryGstin?: string | null;
   deliveryPhone?: string | null;
-  items: CreateChallanItemDto[];
+  designNo?: string | null;
+  dubbleNo?: string | null;
+  mobileNo?: string | null;
+  insideNo?: string | null;
+  dripNo?: string | null;
+  goodsRate?: number;
+  goodsAmount?: number;
+  items?: CreateChallanItemDto[];
+  takaEntries?: CreateTakaEntryDto[];
+  beamEntries?: CreateBeamEntryDto[];
+  yarnEntries?: CreateYarnEntryDto[];
 }
 
 export interface UpdateChallanDto {
@@ -153,7 +245,17 @@ export interface UpdateChallanDto {
   deliveryPostalCode?: string | null;
   deliveryGstin?: string | null;
   deliveryPhone?: string | null;
+  designNo?: string | null;
+  dubbleNo?: string | null;
+  mobileNo?: string | null;
+  insideNo?: string | null;
+  dripNo?: string | null;
+  goodsRate?: number;
+  goodsAmount?: number;
   items?: CreateChallanItemDto[];
+  takaEntries?: CreateTakaEntryDto[];
+  beamEntries?: CreateBeamEntryDto[];
+  yarnEntries?: CreateYarnEntryDto[];
 }
 
 export interface ChallanListQuery extends ListQuery {
@@ -161,4 +263,5 @@ export interface ChallanListQuery extends ListQuery {
   partyId?: string;
   fromDate?: string;
   toDate?: string;
+  challanType?: ChallanType;
 }

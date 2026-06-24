@@ -62,6 +62,16 @@ enum DocumentType {
   CHALLAN
 }
 
+enum ChallanType {
+  SALE
+  GREY
+  FINISHED_TAKA
+  DIRECT
+  SAREES
+  BEAM
+  YARN_SALE
+}
+
 enum PaymentMethod {
   CASH
   CHEQUE
@@ -96,6 +106,18 @@ model Tenant {
   invoices       Invoice[]
   challans       Challan[]
   payments       Payment[]
+  purchaseOrders PurchaseOrder[]
+  saleOrders     SaleOrder[]
+  yarnPurchases    YarnPurchase[]
+  yarnIssues       YarnIssue[]
+  beams            Beam[]
+  beamSendJobworks BeamSendJobwork[]
+  takas              Taka[]
+  greyTPs            GreyTP[]
+  returnTakas        ReturnTaka[]
+  challanTakaEntries ChallanTakaEntry[]
+  challanBeamEntries ChallanBeamEntry[]
+  challanYarnEntries ChallanYarnEntry[]
 }
 
 model TenantUser {
@@ -156,6 +178,12 @@ model SystemSetting {
   @@index([tenantId])
 }
 
+enum OrderStatus {
+  OPEN
+  COMPLETED
+  CANCELLED
+}
+
 model User {
   id        String   @id @default(uuid())
   name      String
@@ -167,16 +195,34 @@ model User {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  tenantUsers     TenantUser[]
-  createdParties  Party[]   @relation("PartyCreatedBy")
-  updatedParties  Party[]   @relation("PartyUpdatedBy")
-  createdProducts Product[] @relation("ProductCreatedBy")
-  updatedProducts Product[] @relation("ProductUpdatedBy")
-  createdInvoices Invoice[] @relation("InvoiceCreatedBy")
-  updatedInvoices Invoice[] @relation("InvoiceUpdatedBy")
-  createdChallans Challan[] @relation("ChallanCreatedBy")
-  updatedChallans Challan[] @relation("ChallanUpdatedBy")
-  createdPayments Payment[] @relation("PaymentCreatedBy")
+  tenantUsers            TenantUser[]
+  createdParties         Party[]          @relation("PartyCreatedBy")
+  updatedParties         Party[]          @relation("PartyUpdatedBy")
+  createdProducts        Product[]        @relation("ProductCreatedBy")
+  updatedProducts        Product[]        @relation("ProductUpdatedBy")
+  createdInvoices        Invoice[]        @relation("InvoiceCreatedBy")
+  updatedInvoices        Invoice[]        @relation("InvoiceUpdatedBy")
+  createdChallans        Challan[]        @relation("ChallanCreatedBy")
+  updatedChallans        Challan[]        @relation("ChallanUpdatedBy")
+  createdPayments        Payment[]        @relation("PaymentCreatedBy")
+  createdPurchaseOrders  PurchaseOrder[]  @relation("PurchaseOrderCreatedBy")
+  updatedPurchaseOrders  PurchaseOrder[]  @relation("PurchaseOrderUpdatedBy")
+  createdSaleOrders      SaleOrder[]      @relation("SaleOrderCreatedBy")
+  updatedSaleOrders      SaleOrder[]      @relation("SaleOrderUpdatedBy")
+  createdYarnPurchases   YarnPurchase[]   @relation("YarnPurchaseCreatedBy")
+  updatedYarnPurchases   YarnPurchase[]   @relation("YarnPurchaseUpdatedBy")
+  createdYarnIssues      YarnIssue[]      @relation("YarnIssueCreatedBy")
+  updatedYarnIssues      YarnIssue[]      @relation("YarnIssueUpdatedBy")
+  createdBeams           Beam[]           @relation("BeamCreatedBy")
+  updatedBeams           Beam[]           @relation("BeamUpdatedBy")
+  createdBeamSends       BeamSendJobwork[] @relation("BeamSendCreatedBy")
+  updatedBeamSends       BeamSendJobwork[] @relation("BeamSendUpdatedBy")
+  createdTakas           Taka[]            @relation("TakaCreatedBy")
+  updatedTakas           Taka[]            @relation("TakaUpdatedBy")
+  createdGreyTPs         GreyTP[]          @relation("GreyTPCreatedBy")
+  updatedGreyTPs         GreyTP[]          @relation("GreyTPUpdatedBy")
+  createdReturnTakas     ReturnTaka[]      @relation("ReturnTakaCreatedBy")
+  updatedReturnTakas     ReturnTaka[]      @relation("ReturnTakaUpdatedBy")
 }
 
 model Party {
@@ -215,6 +261,14 @@ model Party {
   updatedBy          User?     @relation("PartyUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   invoices           Invoice[]
   challans           Challan[]
+  purchaseOrders     PurchaseOrder[]
+  saleOrders         SaleOrder[]
+  yarnPurchases      YarnPurchase[]  @relation("YarnPurchaseParty")
+  beams              Beam[]          @relation("BeamParty")
+  beamSendFirms      BeamSendJobwork[] @relation("BeamSendFirm")
+  beamSendParties    BeamSendJobwork[] @relation("BeamSendParty")
+  takas              Taka[]            @relation("TakaFirm")
+  returnTakas        ReturnTaka[]      @relation("ReturnTakaParty")
 
   @@unique([tenantId, code])
   @@unique([tenantId, gstin])
@@ -252,8 +306,10 @@ model Product {
   updatedById    String?
   createdBy      User?         @relation("ProductCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   updatedBy      User?         @relation("ProductUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-  invoiceItems   InvoiceItem[]
-  challanItems   ChallanItem[]
+  invoiceItems       InvoiceItem[]
+  challanItems       ChallanItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+  saleOrderItems     SaleOrderItem[]
 
   @@unique([tenantId, sku])
   @@index([tenantId])
@@ -373,6 +429,7 @@ model Challan {
   tenantId           String
   tenant             Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   documentType       DocumentType  @default(CHALLAN)
+  challanType        ChallanType   @default(SALE)
   challanNumber      String
   seriesCode         String
   sequenceNumber     Int
@@ -396,8 +453,18 @@ model Challan {
   deliveryPostalCode String?
   deliveryGstin      String?
   deliveryPhone      String?
+  designNo           String?
+  dubbleNo           String?
+  mobileNo           String?
+  insideNo           String?
+  dripNo             String?
+  goodsRate          Decimal       @default(0)
+  goodsAmount        Decimal       @default(0)
+  totalPcs           Int           @default(0)
+  totalCartons       Int           @default(0)
   totalTakas         Int           @default(0)
   totalMeters        Decimal       @default(0)
+  totalWeight        Decimal       @default(0)
   subtotal           Decimal       @default(0)
   discountAmount     Decimal       @default(0)
   gstAmount          Decimal       @default(0)
@@ -411,6 +478,9 @@ model Challan {
   createdBy          User?         @relation("ChallanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   updatedBy          User?         @relation("ChallanUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   items              ChallanItem[]
+  takaEntries        ChallanTakaEntry[]
+  beamEntries        ChallanBeamEntry[]
+  yarnEntries        ChallanYarnEntry[]
   invoices           Invoice[]
 
   @@unique([tenantId, challanNumber])
@@ -516,4 +586,533 @@ model SubscriptionPayment {
   createdAt         DateTime     @default(now())
 
   @@index([subscriptionId])
+}
+
+model PurchaseOrder {
+  id             String      @id @default(uuid())
+  tenantId       String
+  tenant         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orderNumber    String
+  orderDate      DateTime    @default(now())
+  partyId        String
+  party          Party       @relation(fields: [partyId], references: [id], onDelete: Restrict)
+  status         OrderStatus @default(OPEN)
+  remarks        String?
+  totalPieces    Decimal     @default(0)
+  totalQuantity  Decimal     @default(0)
+  totalAmount    Decimal     @default(0)
+  deletedAt      DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  createdById    String?
+  updatedById    String?
+  createdBy      User?       @relation("PurchaseOrderCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy      User?       @relation("PurchaseOrderUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  items          PurchaseOrderItem[]
+
+  @@unique([tenantId, orderNumber])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@index([partyId])
+  @@index([status])
+  @@index([orderDate])
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(uuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  productId       String?
+  product         Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  description     String
+  pieces          Decimal       @default(0)
+  quantity        Decimal       @default(0)
+  rate            Decimal       @default(0)
+  amount          Decimal       @default(0)
+  remarks         String?
+  sortOrder       Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([purchaseOrderId])
+  @@index([productId])
+}
+
+model SaleOrder {
+  id             String      @id @default(uuid())
+  tenantId       String
+  tenant         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orderNumber    String
+  orderDate      DateTime    @default(now())
+  partyId        String
+  party          Party       @relation(fields: [partyId], references: [id], onDelete: Restrict)
+  agentName      String?
+  partyMobileNo  String?
+  status         OrderStatus @default(OPEN)
+  orderDueDays   Int?
+  orderDueDate   DateTime?
+  billDueDays    Int?
+  remarks        String?
+  totalPieces    Decimal     @default(0)
+  totalQuantity  Decimal     @default(0)
+  totalAmount    Decimal     @default(0)
+  deletedAt      DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  createdById    String?
+  updatedById    String?
+  createdBy      User?       @relation("SaleOrderCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy      User?       @relation("SaleOrderUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  items          SaleOrderItem[]
+
+  @@unique([tenantId, orderNumber])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@index([partyId])
+  @@index([status])
+  @@index([orderDate])
+}
+
+model YarnPurchase {
+  id             String      @id @default(uuid())
+  tenantId       String
+  tenant         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  serialNumber   String
+  purchaseDate   DateTime    @default(now())
+  billNo         String?
+  billDate       DateTime?
+  partyId        String
+  party          Party       @relation("YarnPurchaseParty", fields: [partyId], references: [id], onDelete: Restrict)
+  billType       String      @default("PURCHASE ACCOUNT")
+  totalCartons   Int         @default(0)
+  totalCheese    Decimal     @default(0)
+  totalGrossWt   Decimal     @default(0)
+  totalTareWt    Decimal     @default(0)
+  totalNetWt     Decimal     @default(0)
+  totalAmount    Decimal     @default(0)
+  igstRate       Decimal     @default(0)
+  igstAmount     Decimal     @default(0)
+  cgstRate       Decimal     @default(0)
+  cgstAmount     Decimal     @default(0)
+  sgstRate       Decimal     @default(0)
+  sgstAmount     Decimal     @default(0)
+  billAmount     Decimal     @default(0)
+  adjustedAmount Decimal     @default(0)
+  gstReceived    Boolean     @default(false)
+  billRemarks    String?
+  deletedAt      DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  createdById    String?
+  updatedById    String?
+  createdBy      User?       @relation("YarnPurchaseCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy      User?       @relation("YarnPurchaseUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  items          YarnPurchaseItem[]
+
+  @@unique([tenantId, serialNumber])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@index([partyId])
+  @@index([purchaseDate])
+}
+
+model YarnPurchaseItem {
+  id             String       @id @default(uuid())
+  yarnPurchaseId String
+  yarnPurchase   YarnPurchase @relation(fields: [yarnPurchaseId], references: [id], onDelete: Cascade)
+  cartonNo       String
+  itemName       String
+  shadeName      String?
+  lotNo          String?
+  denier         String?
+  twist          String?
+  twistDirection String?
+  cheese         Decimal      @default(0)
+  grossWt        Decimal      @default(0)
+  tareWt         Decimal      @default(0)
+  netWt          Decimal      @default(0)
+  rate           Decimal      @default(0)
+  amount         Decimal      @default(0)
+  sortOrder          Int          @default(0)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  challanYarnEntries ChallanYarnEntry[]
+
+  @@unique([yarnPurchaseId, cartonNo])
+  @@index([yarnPurchaseId])
+  @@index([cartonNo])
+}
+
+model YarnIssue {
+  id             String    @id @default(uuid())
+  tenantId       String
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  issueDate      DateTime  @default(now())
+  slipNo         String
+  cartonNo       String
+  yarnName       String?
+  lotNo          String?
+  twistDirection String?
+  cheese         Decimal   @default(0)
+  netWt          Decimal   @default(0)
+  amount         Decimal   @default(0)
+  shadeName      String?
+  deptName       String    @default("MAIN STORE")
+  remarks        String?
+  deletedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  createdById    String?
+  updatedById    String?
+  createdBy      User?     @relation("YarnIssueCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy      User?     @relation("YarnIssueUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, slipNo])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@index([cartonNo])
+  @@index([issueDate])
+}
+
+model SaleOrderItem {
+  id           String    @id @default(uuid())
+  saleOrderId  String
+  saleOrder    SaleOrder @relation(fields: [saleOrderId], references: [id], onDelete: Cascade)
+  productId    String?
+  product      Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
+  description  String
+  designNo     String?
+  shadeName    String?
+  pieces       Decimal   @default(0)
+  cut          Decimal   @default(0)
+  quantity     Decimal   @default(0)
+  rate         Decimal   @default(0)
+  amount       Decimal   @default(0)
+  remarks      String?
+  sortOrder    Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([saleOrderId])
+  @@index([productId])
+}
+
+enum TakaStatus {
+  IN_STOCK
+  SOLD
+  RETURNED
+  SENT_TO_JOBWORK
+  PROCESSING
+}
+
+enum BeamStatus {
+  NOT_LOADED
+  UNDER_PRODUCTION
+  SENT_TO_JOBWORK
+  BHIRAN_ONLY
+  UNDER_PRI_LOADED
+  BEAM_STOCK
+  BEAM_COMPLETED
+}
+
+model Beam {
+  id             String     @id @default(uuid())
+  tenantId       String
+  tenant         Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  beamNo         String
+  beamDate       DateTime   @default(now())
+  beamPipeNo     String?
+  itemName       String?
+  yarnName       String?
+  lotNo          String?
+  ends           Int        @default(0)
+  takas          Decimal    @default(0)
+  meters         Decimal    @default(0)
+  grossWt        Decimal    @default(0)
+  tareWt         Decimal    @default(0)
+  netWt          Decimal    @default(0)
+  pootha         Decimal    @default(0)
+  beamPosition   String?
+  plannedMeters  Decimal    @default(0)
+  plannedTakas   Decimal    @default(0)
+  shortPercent   Decimal    @default(0)
+  bhiran         Decimal    @default(0)
+  status         BeamStatus @default(NOT_LOADED)
+  partyId        String?
+  party          Party?     @relation("BeamParty", fields: [partyId], references: [id], onDelete: SetNull)
+  warperName     String?
+  loomNo         String?
+  remarks        String?
+  deletedAt      DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  createdById    String?
+  updatedById    String?
+  createdBy      User?      @relation("BeamCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy      User?      @relation("BeamUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  beamSendItems      BeamSendJobworkItem[]
+  beamTakas          Taka[]
+  challanBeamEntries ChallanBeamEntry[]
+
+  @@unique([tenantId, beamNo])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@index([partyId])
+  @@index([beamDate])
+  @@index([status])
+}
+
+model BeamSendJobwork {
+  id             String    @id @default(uuid())
+  tenantId       String
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  serialNumber   String
+  challanDate    DateTime  @default(now())
+  challanNo      String?
+  firmId         String?
+  firm           Party?    @relation("BeamSendFirm", fields: [firmId], references: [id], onDelete: SetNull)
+  partyId        String?
+  party          Party?    @relation("BeamSendParty", fields: [partyId], references: [id], onDelete: SetNull)
+  totalBeamPipes Int       @default(0)
+  totalTakas     Decimal   @default(0)
+  totalMeters    Decimal   @default(0)
+  totalGrossWt   Decimal   @default(0)
+  totalTareWt    Decimal   @default(0)
+  totalNetWt     Decimal   @default(0)
+  totalPootha    Decimal   @default(0)
+  goodsRate      Decimal   @default(0)
+  goodsAmount    Decimal   @default(0)
+  remarks        String?
+  deletedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  createdById    String?
+  updatedById    String?
+  createdBy      User?     @relation("BeamSendCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy      User?     @relation("BeamSendUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  items          BeamSendJobworkItem[]
+
+  @@unique([tenantId, serialNumber])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@index([firmId])
+  @@index([partyId])
+  @@index([challanDate])
+}
+
+model BeamSendJobworkItem {
+  id                 String          @id @default(uuid())
+  beamSendJobworkId  String
+  beamSendJobwork    BeamSendJobwork @relation(fields: [beamSendJobworkId], references: [id], onDelete: Cascade)
+  beamId             String?
+  beam               Beam?           @relation(fields: [beamId], references: [id], onDelete: SetNull)
+  beamNo             String
+  yarnName           String?
+  lotNo              String?
+  ends               Int             @default(0)
+  takas              Decimal         @default(0)
+  meters             Decimal         @default(0)
+  grossWt            Decimal         @default(0)
+  tareWt             Decimal         @default(0)
+  netWt              Decimal         @default(0)
+  pootha             Decimal         @default(0)
+  remarks            String?
+  sortOrder          Int             @default(0)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([beamSendJobworkId])
+  @@index([beamId])
+}
+
+model Taka {
+  id                  String      @id @default(uuid())
+  tenantId            String
+  tenant              Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  takaNo              String
+  takaPrefix          String?
+  date                DateTime    @default(now())
+  loomNo              String?
+  beamId              String?
+  beam                Beam?       @relation(fields: [beamId], references: [id], onDelete: SetNull)
+  firmId              String?
+  firm                Party?      @relation("TakaFirm", fields: [firmId], references: [id], onDelete: SetNull)
+  itemName            String?
+  grade               String?
+  designNo            String?
+  shadeName           String?
+  meters              Decimal     @default(0)
+  weight              Decimal     @default(0)
+  avgWeightPerMeter   Decimal     @default(0)
+  shouldBeWeight      Decimal     @default(0)
+  weightDiff          Decimal     @default(0)
+  sarees              Int         @default(0)
+  pieces              Int         @default(0)
+  cut                 String?
+  workerName          String?
+  foldingDate         DateTime?
+  startingDate        DateTime?
+  cuttingDate         DateTime?
+  salaryDate          DateTime?
+  wtPerMtr            Decimal     @default(0)
+  status              TakaStatus  @default(IN_STOCK)
+  isWithBeam          Boolean     @default(false)
+  serialNoWiseTaka    Boolean     @default(false)
+  remarks             String?
+  deletedAt           DateTime?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  createdById         String?
+  updatedById         String?
+  createdBy           User?       @relation("TakaCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy           User?       @relation("TakaUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  greyTPs             GreyTP[]
+  returnTakas         ReturnTaka[]
+  challanTakaEntries  ChallanTakaEntry[]
+
+  @@unique([tenantId, takaNo])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@index([beamId])
+  @@index([firmId])
+  @@index([date])
+  @@index([status])
+  @@index([loomNo])
+  @@index([itemName])
+}
+
+model GreyTP {
+  id               String    @id @default(uuid())
+  tenantId         String
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  takaId           String
+  taka             Taka      @relation(fields: [takaId], references: [id], onDelete: Cascade)
+  date             DateTime  @default(now())
+  newMeters        Decimal   @default(0)
+  originalMeters   Decimal   @default(0)
+  newWeight        Decimal   @default(0)
+  originalWeight   Decimal   @default(0)
+  newSarees        Int       @default(0)
+  originalSarees   Int       @default(0)
+  remark           String?
+  deletedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  createdById      String?
+  updatedById      String?
+  createdBy        User?     @relation("GreyTPCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy        User?     @relation("GreyTPUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@index([takaId])
+  @@index([date])
+}
+
+model ReturnTaka {
+  id           String    @id @default(uuid())
+  tenantId     String
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  takaId       String
+  taka         Taka      @relation(fields: [takaId], references: [id], onDelete: Cascade)
+  returnDate   DateTime  @default(now())
+  partyId      String?
+  party        Party?    @relation("ReturnTakaParty", fields: [partyId], references: [id], onDelete: SetNull)
+  challanNo    String?
+  rate         Decimal   @default(0)
+  remarks      String?
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdById  String?
+  updatedById  String?
+  createdBy    User?     @relation("ReturnTakaCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy    User?     @relation("ReturnTakaUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@index([takaId])
+  @@index([partyId])
+  @@index([returnDate])
+}
+
+model ChallanTakaEntry {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  challanId   String
+  challan     Challan  @relation(fields: [challanId], references: [id], onDelete: Cascade)
+  takaId      String
+  taka        Taka     @relation(fields: [takaId], references: [id], onDelete: Cascade)
+  takaNo      String
+  itemName    String?
+  loomNo      String?
+  meters      Decimal  @default(0)
+  weight      Decimal  @default(0)
+  grade       String?
+  designNo    String?
+  shadeName   String?
+  cut         String?
+  sarees      Int      @default(0)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([challanId])
+  @@index([takaId])
+  @@index([tenantId])
+}
+
+model ChallanBeamEntry {
+  id           String   @id @default(uuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  challanId    String
+  challan      Challan  @relation(fields: [challanId], references: [id], onDelete: Cascade)
+  beamId       String
+  beam         Beam     @relation(fields: [beamId], references: [id], onDelete: Cascade)
+  beamNo       String
+  beamPosNo    String?
+  yarnName     String?
+  lotNo        String?
+  ends         Int      @default(0)
+  meters       Decimal  @default(0)
+  grossWt      Decimal  @default(0)
+  tareWt       Decimal  @default(0)
+  netWt        Decimal  @default(0)
+  pootha       Decimal  @default(0)
+  remarks      String?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([challanId])
+  @@index([beamId])
+  @@index([tenantId])
+}
+
+model ChallanYarnEntry {
+  id                 String           @id @default(uuid())
+  tenantId           String
+  tenant             Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  challanId          String
+  challan            Challan          @relation(fields: [challanId], references: [id], onDelete: Cascade)
+  yarnPurchaseItemId String
+  yarnPurchaseItem   YarnPurchaseItem @relation(fields: [yarnPurchaseItemId], references: [id], onDelete: Cascade)
+  cartonNo           String
+  itemName           String
+  shadeName          String?
+  lotNo              String?
+  denier             String?
+  twist              String?
+  twistDirection     String?
+  cheese             Decimal          @default(0)
+  grossWt            Decimal          @default(0)
+  tareWt             Decimal          @default(0)
+  netWt              Decimal          @default(0)
+  remarks            String?
+  sortOrder          Int              @default(0)
+  createdAt          DateTime         @default(now())
+
+  @@index([challanId])
+  @@index([yarnPurchaseItemId])
+  @@index([tenantId])
 }
