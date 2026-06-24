@@ -110,7 +110,7 @@ export const DashboardService = {
         count: outstandingAgg._count,
         totalBalance: Number(outstandingAgg._sum.balanceAmount ?? 0),
       },
-      recentInvoices: recentInvoices.map((inv) => ({
+      recentInvoices: recentInvoices.map((inv: any) => ({
         id: inv.id,
         invoiceNumber: inv.invoiceNumber,
         partyName: inv.party.name,
@@ -118,7 +118,7 @@ export const DashboardService = {
         issueDate: inv.issueDate.toISOString(),
         status: inv.status,
       })),
-      recentChallans: recentChallans.map((ch) => ({
+      recentChallans: recentChallans.map((ch: any) => ({
         id: ch.id,
         challanNumber: ch.challanNumber,
         partyName: ch.party.name,
@@ -126,7 +126,7 @@ export const DashboardService = {
         issueDate: ch.issueDate.toISOString(),
         status: ch.status,
       })),
-      overdueInvoices: overdueInvoices.map((inv) => ({
+      overdueInvoices: overdueInvoices.map((inv: any) => ({
         id: inv.id,
         invoiceNumber: inv.invoiceNumber,
         partyName: inv.party.name,

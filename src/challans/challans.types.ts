@@ -5,7 +5,7 @@ import type { ListQuery } from "../common/types/query";
 export interface ChallanRollEntryDto {
   id: string;
   serialNumber: number;
-  meters: string;
+  meters: number;
 }
 
 export interface ChallanItemDto {
@@ -13,16 +13,16 @@ export interface ChallanItemDto {
   productId: string | null;
   description: string;
   hsnCode: string | null;
-  quantity: string;
+  quantity: number;
   unit: string;
   unitType: string;
-  rate: string;
-  discountAmount: string;
-  gstRate: string;
-  taxableAmount: string;
-  gstAmount: string;
-  subtotal: string;
-  grandTotal: string;
+  rate: number;
+  discountAmount: number;
+  gstRate: number;
+  taxableAmount: number;
+  gstAmount: number;
+  subtotal: number;
+  grandTotal: number;
   sortOrder: number;
   rollEntries: ChallanRollEntryDto[];
   product: ChallanProductDto | null;
@@ -63,8 +63,8 @@ export interface ChallanTakaEntryDto {
   takaNo: string;
   itemName: string | null;
   loomNo: string | null;
-  meters: string;
-  weight: string;
+  meters: number;
+  weight: number;
   grade: string | null;
   designNo: string | null;
   shadeName: string | null;
@@ -81,11 +81,11 @@ export interface ChallanBeamEntryDto {
   yarnName: string | null;
   lotNo: string | null;
   ends: number;
-  meters: string;
-  grossWt: string;
-  tareWt: string;
-  netWt: string;
-  pootha: string;
+  meters: number;
+  grossWt: number;
+  tareWt: number;
+  netWt: number;
+  pootha: number;
   remarks: string | null;
   sortOrder: number;
 }
@@ -100,10 +100,10 @@ export interface ChallanYarnEntryDto {
   denier: string | null;
   twist: string | null;
   twistDirection: string | null;
-  cheese: string;
-  grossWt: string;
-  tareWt: string;
-  netWt: string;
+  cheese: number;
+  grossWt: number;
+  tareWt: number;
+  netWt: number;
   remarks: string | null;
   sortOrder: number;
 }
@@ -139,18 +139,18 @@ export interface ChallanDto {
   mobileNo: string | null;
   insideNo: string | null;
   dripNo: string | null;
-  goodsRate: string;
-  goodsAmount: string;
+  goodsRate: number;
+  goodsAmount: number;
   totalPcs: number;
   totalCartons: number;
   totalTakas: number;
-  totalMeters: string;
-  totalWeight: string;
-  subtotal: string;
-  discountAmount: string;
-  gstAmount: string;
-  roundOff: string;
-  grandTotal: string;
+  totalMeters: number;
+  totalWeight: number;
+  subtotal: number;
+  discountAmount: number;
+  gstAmount: number;
+  roundOff: number;
+  grandTotal: number;
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;

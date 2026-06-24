@@ -66,7 +66,7 @@ export const deleteYarnPurchase = asyncHandler(async (req: Request, res: Respons
 
 export const lookupCarton = asyncHandler(async (req: Request, res: Response) => {
   const { tenantId } = (req as any).user;
-  const cartonNo = req.params.cartonNo;
+  const cartonNo = String(req.params.cartonNo);
 
   const item = await prisma.yarnPurchaseItem.findFirst({
     where: {
@@ -116,7 +116,7 @@ export const getDistinctYarnItems = asyncHandler(async (req: Request, res: Respo
     orderBy: { itemName: "asc" },
   });
 
-  return ApiResponse.ok(res, "Distinct yarn items", items.map((i) => i.itemName));
+  return ApiResponse.ok(res, "Distinct yarn items", items.map((i: any) => i.itemName));
 });
 
 export const getYarnStockReport = asyncHandler(async (req: Request, res: Response) => {

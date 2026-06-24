@@ -11,8 +11,8 @@ function fmtDate(v?: string | null): string {
   return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getFullYear()).slice(2)}`;
 }
 
-function fmtNum(v: string | number): string {
-  return parseFloat(String(v)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function fmtNum(v: string | number | null | undefined): string {
+  return parseFloat(String(v ?? 0)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export interface InvoicePdfData {
@@ -32,18 +32,18 @@ export interface InvoicePdfData {
     notes: string | null;
     terms: string | null;
     remark: string | null;
-    interestRate: string | null;
-    subtotal: string;
-    discountAmount: string;
-    freightCharges: string;
-    taxableAmount: string;
-    sgstRate: string;
-    sgstAmount: string;
-    cgstRate: string;
-    cgstAmount: string;
-    igstRate: string;
-    igstAmount: string;
-    grandTotal: string;
+    interestRate: number | null;
+    subtotal: number;
+    discountAmount: number;
+    freightCharges: number;
+    taxableAmount: number;
+    sgstRate: number;
+    sgstAmount: number;
+    cgstRate: number;
+    cgstAmount: number;
+    igstRate: number;
+    igstAmount: number;
+    grandTotal: number;
     bankName: string | null;
     bankAccountNo: string | null;
     bankIfsc: string | null;
@@ -52,10 +52,10 @@ export interface InvoicePdfData {
       id: string;
       description: string;
       hsnCode: string | null;
-      pieces: string | null;
-      quantity: string;
-      rate: string;
-      subtotal: string;
+      pieces: number | null;
+      quantity: number;
+      rate: number;
+      subtotal: number;
     }[];
     party: {
       name: string;
@@ -115,16 +115,16 @@ export function buildInvoiceHtml(data: InvoicePdfData): string {
   const bankIfsc = inv.bankIfsc ?? co?.bankIfsc ?? "";
   const bankBranch = inv.bankBranch ?? co?.bankBranch ?? "";
 
-  const totalPieces = items.reduce((s, it) => s + (it.pieces ? parseFloat(it.pieces) : 0), 0);
-  const totalQty = items.reduce((s, it) => s + parseFloat(it.quantity), 0);
-  const gt = parseFloat(inv.grandTotal);
-  const interestPerDay = inv.interestRate ? (gt * parseFloat(inv.interestRate) / 100 / 365).toFixed(2) : null;
+  const totalPieces = items.reduce((s, it) => s + (it.pieces ?? 0), 0);
+  const totalQty = items.reduce((s, it) => s + it.quantity, 0);
+  const gt = inv.grandTotal;
+  const interestPerDay = inv.interestRate ? (gt * inv.interestRate / 100 / 365).toFixed(2) : null;
   const netRate = totalQty > 0 ? (gt / totalQty).toFixed(3) : null;
-  const hasSgst = parseFloat(inv.sgstAmount) > 0;
-  const hasCgst = parseFloat(inv.cgstAmount) > 0;
-  const hasIgst = parseFloat(inv.igstAmount) > 0;
-  const hasDiscount = parseFloat(inv.discountAmount) > 0;
-  const hasFreight = parseFloat(inv.freightCharges) > 0;
+  const hasSgst = inv.sgstAmount > 0;
+  const hasCgst = inv.cgstAmount > 0;
+  const hasIgst = inv.igstAmount > 0;
+  const hasDiscount = inv.discountAmount > 0;
+  const hasFreight = inv.freightCharges > 0;
   const amountRowSpan = 1 + ((hasSgst || hasCgst) ? 1 : 0) + (hasIgst ? 1 : 0);
 
   const bd = "1.7px solid #000";
@@ -148,8 +148,8 @@ export function buildInvoiceHtml(data: InvoicePdfData): string {
     gstRows = `
       <tr>
         <td colspan="3" style="border-top:${bd};border-right:${bd};padding:8px 4px 8px 8px;font-size:${font};vertical-align:top">
-          <div style="padding:1px 0">SGST Amt @ ${parseFloat(inv.sgstRate).toFixed(2)} %</div>
-          <div style="padding:1px 0">CGST Amt @ ${parseFloat(inv.cgstRate).toFixed(2)} %</div>
+          <div style="padding:1px 0">SGST Amt @ ${inv.sgstRate.toFixed(2)} %</div>
+          <div style="padding:1px 0">CGST Amt @ ${inv.cgstRate.toFixed(2)} %</div>
         </td>
         <td style="border-top:${bd};padding:8px 8px 8px 4px;font-size:${font};text-align:right;vertical-align:top">
           <div style="padding:1px 0">${fmtNum(inv.sgstAmount)}</div>
@@ -159,20 +159,20 @@ export function buildInvoiceHtml(data: InvoicePdfData): string {
   } else if (hasSgst) {
     gstRows = `
       <tr>
-        <td colspan="3" style="border-top:${bd};border-right:${bd};padding:3px 4px 3px 8px;font-size:${font};vertical-align:middle">SGST Amt @ ${parseFloat(inv.sgstRate).toFixed(2)} %</td>
+        <td colspan="3" style="border-top:${bd};border-right:${bd};padding:3px 4px 3px 8px;font-size:${font};vertical-align:middle">SGST Amt @ ${inv.sgstRate.toFixed(2)} %</td>
         <td style="border-top:${bd};padding:3px 8px 3px 4px;font-size:${font};text-align:right;vertical-align:middle">${fmtNum(inv.sgstAmount)}</td>
       </tr>`;
   } else if (hasCgst) {
     gstRows = `
       <tr>
-        <td colspan="3" style="border-top:${bd};border-right:${bd};padding:3px 4px 3px 8px;font-size:${font};vertical-align:middle">CGST Amt @ ${parseFloat(inv.cgstRate).toFixed(2)} %</td>
+        <td colspan="3" style="border-top:${bd};border-right:${bd};padding:3px 4px 3px 8px;font-size:${font};vertical-align:middle">CGST Amt @ ${inv.cgstRate.toFixed(2)} %</td>
         <td style="border-top:${bd};padding:3px 8px 3px 4px;font-size:${font};text-align:right;vertical-align:middle">${fmtNum(inv.cgstAmount)}</td>
       </tr>`;
   }
   if (hasIgst) {
     gstRows += `
       <tr>
-        <td colspan="3" style="border-top:${bd};border-right:${bd};padding:3px 4px 3px 8px;font-size:${font};vertical-align:middle">IGST Amt @ ${parseFloat(inv.igstRate).toFixed(2)} %</td>
+        <td colspan="3" style="border-top:${bd};border-right:${bd};padding:3px 4px 3px 8px;font-size:${font};vertical-align:middle">IGST Amt @ ${inv.igstRate.toFixed(2)} %</td>
         <td style="border-top:${bd};padding:3px 8px 3px 4px;font-size:${font};text-align:right;vertical-align:middle">${fmtNum(inv.igstAmount)}</td>
       </tr>`;
   }

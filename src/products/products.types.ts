@@ -9,12 +9,12 @@ export interface ProductDto {
   hsnCode: string | null;
   unitType: UnitType;
   gstType: GSTType;
-  gstRate: string;
-  purchaseRate: string;
-  sellingRate: string;
+  gstRate: number;
+  purchaseRate: number;
+  sellingRate: number;
   trackInventory: boolean;
-  openingStock: string;
-  reorderLevel: string;
+  openingStock: number;
+  reorderLevel: number;
   isActive: boolean;
   deletedAt: string | null;
   createdAt: string;

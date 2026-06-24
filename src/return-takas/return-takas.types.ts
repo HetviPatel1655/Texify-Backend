@@ -1,4 +1,4 @@
-import type { ListQuery } from "../common/repositories/base.repository.js";
+import type { ListQuery } from "../common/types/query.js";
 
 export interface ReturnTakaDto {
   id: string;

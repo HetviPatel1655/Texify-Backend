@@ -30,7 +30,7 @@ export interface InvoiceProductDto {
   hsnCode: string | null;
   unitType: UnitType;
   gstType: GSTType;
-  gstRate: string;
+  gstRate: number;
 }
 
 export interface InvoiceItemDto {
@@ -38,17 +38,17 @@ export interface InvoiceItemDto {
   productId: string | null;
   description: string;
   hsnCode: string | null;
-  quantity: string;
-  pieces: string | null;
+  quantity: number;
+  pieces: number | null;
   unit: string;
   unitType: string;
-  rate: string;
-  discountAmount: string;
-  gstRate: string;
-  taxableAmount: string;
-  gstAmount: string;
-  subtotal: string;
-  grandTotal: string;
+  rate: number;
+  discountAmount: number;
+  gstRate: number;
+  taxableAmount: number;
+  gstAmount: number;
+  subtotal: number;
+  grandTotal: number;
   sortOrder: number;
   product: InvoiceProductDto | null;
 }
@@ -78,22 +78,22 @@ export interface InvoiceDto {
   notes: string | null;
   terms: string | null;
   remark: string | null;
-  interestRate: string | null;
-  subtotal: string;
-  discountAmount: string;
-  taxableAmount: string;
-  gstAmount: string;
-  sgstRate: string;
-  sgstAmount: string;
-  cgstRate: string;
-  cgstAmount: string;
-  igstRate: string;
-  igstAmount: string;
-  freightCharges: string;
-  roundOff: string;
-  grandTotal: string;
-  paidAmount: string;
-  balanceAmount: string;
+  interestRate: number | null;
+  subtotal: number;
+  discountAmount: number;
+  taxableAmount: number;
+  gstAmount: number;
+  sgstRate: number;
+  sgstAmount: number;
+  cgstRate: number;
+  cgstAmount: number;
+  igstRate: number;
+  igstAmount: number;
+  freightCharges: number;
+  roundOff: number;
+  grandTotal: number;
+  paidAmount: number;
+  balanceAmount: number;
   bankName: string | null;
   bankAccountNo: string | null;
   bankIfsc: string | null;

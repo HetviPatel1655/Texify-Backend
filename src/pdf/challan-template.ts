@@ -9,7 +9,7 @@ function fmtDate(v?: string | null): string {
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 }
 
-interface RollEntry { serialNumber: number; meters: string }
+interface RollEntry { serialNumber: number; meters: number }
 
 interface ChallanItem {
   description: string;
@@ -25,7 +25,7 @@ export interface ChallanPdfData {
     vehicleNumber: string | null;
     notes: string | null;
     totalTakas: number;
-    totalMeters: string;
+    totalMeters: number;
     deliveryPartyName: string | null;
     deliveryAddress1: string | null;
     deliveryAddress2: string | null;
@@ -84,13 +84,13 @@ function buildRollGrid(entries: RollEntry[], rowsPerColumn: number): string {
     const cells = columns.map(group => {
       const entry = group[ri];
       return `<td style="border-left:${B};padding:1px 4px 1px 8px">${entry ? entry.serialNumber : " "}</td>
-              <td style="border-right:${B};padding:1px 10px 1px 4px;text-align:right">${entry ? parseFloat(entry.meters).toFixed(2) : " "}</td>`;
+              <td style="border-right:${B};padding:1px 10px 1px 4px;text-align:right">${entry ? entry.meters.toFixed(2) : " "}</td>`;
     }).join("");
     bodyRows += `<tr>${cells}</tr>`;
   }
 
   const footCells = columns.map(group => {
-    const total = group.reduce((s, e) => s + parseFloat(e.meters), 0);
+    const total = group.reduce((s, e) => s + e.meters, 0);
     return `<td style="border-left:${B};padding:2px 4px 2px 8px">&nbsp;</td>
             <td style="border-top:${B};border-bottom:${B};border-right:${B};padding:2px 10px 2px 4px;text-align:right;font-weight:bold">${total.toFixed(2)}</td>`;
   }).join("");
@@ -164,7 +164,7 @@ function buildSingleChallan(data: ChallanPdfData): string {
       ${firstItem ? `<tr><td colspan="2" style="border-bottom:${B};padding:3px 6px">
         <b>Item:</b>&nbsp;&nbsp;&nbsp;&nbsp;${esc(firstItem.description)}
         <span style="margin-left:40px"><b>Total Takas :</b>&nbsp;&nbsp;&nbsp;&nbsp;${ch.totalTakas}</span>
-        <span style="margin-left:40px"><b>Total Meters :</b>&nbsp;&nbsp;&nbsp;&nbsp;${parseFloat(ch.totalMeters).toFixed(2)}</span>
+        <span style="margin-left:40px"><b>Total Meters :</b>&nbsp;&nbsp;&nbsp;&nbsp;${ch.totalMeters.toFixed(2)}</span>
       </td></tr>` : ""}
       <tr>
         <td style="border-bottom:${B};padding:2px 6px;width:50%"><b>Remark :</b>&nbsp;${esc(ch.remark)}</td>

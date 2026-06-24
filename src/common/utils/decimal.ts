@@ -1,7 +1,7 @@
-export function formatDecimalValue(value: { toString(): string } | number | string | null | undefined): string {
+export function formatDecimalValue(value: { toString(): string } | number | string | null | undefined): number {
   if (value === null || value === undefined) {
-    return "0";
+    return 0;
   }
 
-  return value.toString();
+  return Number(value);
 }

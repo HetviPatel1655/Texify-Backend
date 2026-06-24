@@ -12,7 +12,7 @@ export interface RecordPaymentDto {
 export interface PaymentDto {
   id: string;
   invoiceId: string;
-  amount: string;
+  amount: number;
   method: PaymentMethod;
   referenceNo: string | null;
   paymentDate: string;

@@ -47,7 +47,7 @@ export const getTakaById = asyncHandler(async (req: Request, res: Response) => {
 
 export const getTakaByNo = asyncHandler(async (req: Request, res: Response) => {
   const { tenantId } = (req as any).user;
-  const takaNo = req.params.takaNo;
+  const takaNo = String(req.params.takaNo);
   const taka = await service.getByTakaNo(takaNo, tenantId);
 
   if (!taka) throw new AppError("Taka not found", 404);
