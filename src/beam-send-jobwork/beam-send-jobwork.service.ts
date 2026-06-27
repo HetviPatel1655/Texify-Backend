@@ -1,15 +1,15 @@
-import { prisma } from "../lib/prisma.js";
-import { AppError } from "../common/errors/appError.js";
-import type { CrudContext } from "../common/services/baseCrud.service.js";
-import type { RepositoryListResult } from "../common/repositories/base.repository.js";
-import { formatDecimalValue } from "../common/utils/decimal.js";
-import { BeamSendJobworkRepository } from "./beam-send-jobwork.repository.js";
+import { prisma } from "../lib/prisma";
+import { AppError } from "../common/errors/appError";
+import type { CrudContext } from "../common/services/baseCrud.service";
+import type { RepositoryListResult } from "../common/repositories/base.repository";
+import { formatDecimalValue } from "../common/utils/decimal";
+import { BeamSendJobworkRepository } from "./beam-send-jobwork.repository";
 import type {
   CreateBeamSendDto,
   BeamSendDto,
   BeamSendListQuery,
   UpdateBeamSendDto,
-} from "./beam-send-jobwork.types.js";
+} from "./beam-send-jobwork.types";
 
 const beamSendSelect = {
   id: true,

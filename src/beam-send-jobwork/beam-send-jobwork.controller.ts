@@ -1,11 +1,11 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 
-import { asyncHandler } from "../common/middleware/asyncHandler.js";
-import { ApiResponse } from "../common/utils/apiResponse.js";
-import { AppError } from "../common/errors/appError.js";
-import { parseListQuery, toOptionalString } from "../common/utils/query.js";
-import { BeamSendJobworkService } from "./beam-send-jobwork.service.js";
+import { asyncHandler } from "../common/middleware/asyncHandler";
+import { ApiResponse } from "../common/utils/apiResponse";
+import { AppError } from "../common/errors/appError";
+import { parseListQuery, toOptionalString } from "../common/utils/query";
+import { BeamSendJobworkService } from "./beam-send-jobwork.service";
 
 const service = new BeamSendJobworkService();
 const idSchema = z.string().uuid();

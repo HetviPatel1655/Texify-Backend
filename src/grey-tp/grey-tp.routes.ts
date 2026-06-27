@@ -1,19 +1,19 @@
 import { Router } from "express";
 
-import { authMiddleware } from "../auth/auth.middleware.js";
-import { validateBody, validateQuery } from "../common/middleware/validateBody.js";
+import { authMiddleware } from "../auth/auth.middleware";
+import { validateBody, validateQuery } from "../common/middleware/validateBody";
 import {
   createGreyTPSchema,
   listGreyTPQuerySchema,
   updateGreyTPSchema,
-} from "./grey-tp.validators.js";
+} from "./grey-tp.validators";
 import {
   createGreyTP,
   deleteGreyTP,
   getGreyTPById,
   listGreyTPs,
   updateGreyTP,
-} from "./grey-tp.controller.js";
+} from "./grey-tp.controller";
 
 const router = Router();
 

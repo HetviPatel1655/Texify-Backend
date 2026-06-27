@@ -1,15 +1,15 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 
-import { asyncHandler } from "../common/middleware/asyncHandler.js";
-import { ApiResponse } from "../common/utils/apiResponse.js";
-import { AppError } from "../common/errors/appError.js";
-import { parseListQuery, toOptionalString } from "../common/utils/query.js";
-import { YarnPurchasesService } from "./yarn-purchases.service.js";
-import { getYarnStock } from "./yarn-stock.service.js";
-import type { YarnStockQuery } from "./yarn-stock.types.js";
-import { prisma } from "../lib/prisma.js";
-import { formatDecimalValue } from "../common/utils/decimal.js";
+import { asyncHandler } from "../common/middleware/asyncHandler";
+import { ApiResponse } from "../common/utils/apiResponse";
+import { AppError } from "../common/errors/appError";
+import { parseListQuery, toOptionalString } from "../common/utils/query";
+import { YarnPurchasesService } from "./yarn-purchases.service";
+import { getYarnStock } from "./yarn-stock.service";
+import type { YarnStockQuery } from "./yarn-stock.types";
+import { prisma } from "../lib/prisma";
+import { formatDecimalValue } from "../common/utils/decimal";
 
 const service = new YarnPurchasesService();
 const idSchema = z.string().uuid();

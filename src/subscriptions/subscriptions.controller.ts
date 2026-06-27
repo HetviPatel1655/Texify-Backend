@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import { asyncHandler } from "../common/middleware/asyncHandler.js";
-import { ApiResponse } from "../common/utils/apiResponse.js";
-import { SubscriptionsService } from "./subscriptions.service.js";
+import { asyncHandler } from "../common/middleware/asyncHandler";
+import { ApiResponse } from "../common/utils/apiResponse";
+import { SubscriptionsService } from "./subscriptions.service";
 
 export const getSubscription = asyncHandler(async (req: Request, res: Response) => {
   const { tenantId } = (req as any).user;

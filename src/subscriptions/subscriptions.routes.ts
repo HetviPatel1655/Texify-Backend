@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { authMiddleware } from "../auth/auth.middleware.js";
-import { validateBody } from "../common/middleware/validateBody.js";
-import { createSubscriptionSchema, verifySubscriptionSchema, cancelSubscriptionSchema } from "./subscriptions.validators.js";
-import * as controller from "./subscriptions.controller.js";
+import { authMiddleware } from "../auth/auth.middleware";
+import { validateBody } from "../common/middleware/validateBody";
+import { createSubscriptionSchema, verifySubscriptionSchema, cancelSubscriptionSchema } from "./subscriptions.validators";
+import * as controller from "./subscriptions.controller";
 
 const subscriptionsRouter = Router();
 

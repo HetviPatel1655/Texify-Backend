@@ -1,4 +1,4 @@
-import type { ListQuery } from "../common/types/query.js";
+import type { ListQuery } from "../common/types/query";
 
 export interface TakaDto {
   id: string;

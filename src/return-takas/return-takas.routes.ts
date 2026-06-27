@@ -1,19 +1,19 @@
 import { Router } from "express";
 
-import { authMiddleware } from "../auth/auth.middleware.js";
-import { validateBody, validateQuery } from "../common/middleware/validateBody.js";
+import { authMiddleware } from "../auth/auth.middleware";
+import { validateBody, validateQuery } from "../common/middleware/validateBody";
 import {
   createReturnTakaSchema,
   listReturnTakaQuerySchema,
   updateReturnTakaSchema,
-} from "./return-takas.validators.js";
+} from "./return-takas.validators";
 import {
   createReturnTaka,
   deleteReturnTaka,
   getReturnTakaById,
   listReturnTakas,
   updateReturnTaka,
-} from "./return-takas.controller.js";
+} from "./return-takas.controller";
 
 const router = Router();
 

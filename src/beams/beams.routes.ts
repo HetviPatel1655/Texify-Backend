@@ -1,12 +1,12 @@
 import { Router } from "express";
 
-import { authMiddleware } from "../auth/auth.middleware.js";
-import { validateBody, validateQuery } from "../common/middleware/validateBody.js";
+import { authMiddleware } from "../auth/auth.middleware";
+import { validateBody, validateQuery } from "../common/middleware/validateBody";
 import {
   createBeamSchema,
   listBeamQuerySchema,
   updateBeamSchema,
-} from "./beams.validators.js";
+} from "./beams.validators";
 import {
   createBeam,
   deleteBeam,
@@ -15,7 +15,7 @@ import {
   getNextBeamNo,
   listBeams,
   updateBeam,
-} from "./beams.controller.js";
+} from "./beams.controller";
 
 const router = Router();
 

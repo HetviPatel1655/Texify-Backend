@@ -1,4 +1,4 @@
-import { amountToWords } from "./amount-to-words.js";
+import { amountToWords } from "./amount-to-words";
 
 function esc(v: string | null | undefined): string {
   if (!v) return "";

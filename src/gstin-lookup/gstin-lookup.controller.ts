@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { lookupGstin } from "./gstin-lookup.service.js";
-import { setApiKey, getKeyStatus } from "./gstin-key-manager.js";
+import { lookupGstin } from "./gstin-lookup.service";
+import { setApiKey, getKeyStatus } from "./gstin-key-manager";
 
 export async function getGstinDetails(req: Request, res: Response) {
   const { tenantId } = (req as any).user;

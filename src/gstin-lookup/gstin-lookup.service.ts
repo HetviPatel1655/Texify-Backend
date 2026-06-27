@@ -1,7 +1,7 @@
-import { AppError } from "../common/errors/appError.js";
-import { getValidApiKey, incrementCallCount } from "./gstin-key-manager.js";
-import { FeatureGateService } from "../feature-gate/feature-gate.service.js";
-import type { GstinLookupResult } from "./gstin-lookup.types.js";
+import { AppError } from "../common/errors/appError";
+import { getValidApiKey, incrementCallCount } from "./gstin-key-manager";
+import { FeatureGateService } from "../feature-gate/feature-gate.service";
+import type { GstinLookupResult } from "./gstin-lookup.types";
 
 const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$/;
 

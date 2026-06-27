@@ -1,11 +1,11 @@
 import { Prisma } from "@prisma/client";
 
-import { prisma } from "../lib/prisma.js";
-import { createListQuery, type RepositoryListResult } from "../common/repositories/base.repository.js";
-import { buildSearchWhere } from "../common/utils/query.js";
-import { formatDecimalValue } from "../common/utils/decimal.js";
-import type { YarnIssueDto, YarnIssueListQuery } from "./yarn-issues.types.js";
-import { yarnIssueSearchableFields } from "./yarn-issues.constants.js";
+import { prisma } from "../lib/prisma";
+import { createListQuery, type RepositoryListResult } from "../common/repositories/base.repository";
+import { buildSearchWhere } from "../common/utils/query";
+import { formatDecimalValue } from "../common/utils/decimal";
+import type { YarnIssueDto, YarnIssueListQuery } from "./yarn-issues.types";
+import { yarnIssueSearchableFields } from "./yarn-issues.constants";
 
 const yarnIssueSelect = {
   id: true,

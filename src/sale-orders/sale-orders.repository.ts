@@ -1,11 +1,11 @@
 import { Prisma } from "@prisma/client";
 
-import { prisma } from "../lib/prisma.js";
-import { createListQuery, type RepositoryListResult } from "../common/repositories/base.repository.js";
-import { buildSearchWhere } from "../common/utils/query.js";
-import { formatDecimalValue } from "../common/utils/decimal.js";
-import type { SaleOrderDto, SaleOrderItemDto, SaleOrderListQuery } from "./sale-orders.types.js";
-import { saleOrderSearchableFields } from "./sale-orders.constants.js";
+import { prisma } from "../lib/prisma";
+import { createListQuery, type RepositoryListResult } from "../common/repositories/base.repository";
+import { buildSearchWhere } from "../common/utils/query";
+import { formatDecimalValue } from "../common/utils/decimal";
+import type { SaleOrderDto, SaleOrderItemDto, SaleOrderListQuery } from "./sale-orders.types";
+import { saleOrderSearchableFields } from "./sale-orders.constants";
 
 const saleOrderSelect = {
   id: true,

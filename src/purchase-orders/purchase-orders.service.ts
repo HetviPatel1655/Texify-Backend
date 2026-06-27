@@ -1,13 +1,13 @@
-import { AppError } from "../common/errors/appError.js";
-import type { CrudContext } from "../common/services/baseCrud.service.js";
-import type { RepositoryListResult } from "../common/repositories/base.repository.js";
-import { PurchaseOrdersRepository } from "./purchase-orders.repository.js";
+import { AppError } from "../common/errors/appError";
+import type { CrudContext } from "../common/services/baseCrud.service";
+import type { RepositoryListResult } from "../common/repositories/base.repository";
+import { PurchaseOrdersRepository } from "./purchase-orders.repository";
 import type {
   CreatePurchaseOrderDto,
   PurchaseOrderDto,
   PurchaseOrderListQuery,
   UpdatePurchaseOrderDto,
-} from "./purchase-orders.types.js";
+} from "./purchase-orders.types";
 
 export class PurchaseOrdersService {
   constructor(private readonly repository = new PurchaseOrdersRepository()) {}

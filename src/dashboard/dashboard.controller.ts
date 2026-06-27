@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import { asyncHandler } from "../common/middleware/asyncHandler.js";
-import { ApiResponse } from "../common/utils/apiResponse.js";
-import { DashboardService } from "./dashboard.service.js";
+import { asyncHandler } from "../common/middleware/asyncHandler";
+import { ApiResponse } from "../common/utils/apiResponse";
+import { DashboardService } from "./dashboard.service";
 
 export const getDashboardStats = asyncHandler(
   async (req: Request, res: Response) => {

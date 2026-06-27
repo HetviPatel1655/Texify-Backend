@@ -1,13 +1,13 @@
-import { AppError } from "../common/errors/appError.js";
-import type { CrudContext } from "../common/services/baseCrud.service.js";
-import type { RepositoryListResult } from "../common/repositories/base.repository.js";
-import { YarnPurchasesRepository } from "./yarn-purchases.repository.js";
+import { AppError } from "../common/errors/appError";
+import type { CrudContext } from "../common/services/baseCrud.service";
+import type { RepositoryListResult } from "../common/repositories/base.repository";
+import { YarnPurchasesRepository } from "./yarn-purchases.repository";
 import type {
   CreateYarnPurchaseDto,
   YarnPurchaseDto,
   YarnPurchaseListQuery,
   UpdateYarnPurchaseDto,
-} from "./yarn-purchases.types.js";
+} from "./yarn-purchases.types";
 
 export class YarnPurchasesService {
   constructor(private readonly repository = new YarnPurchasesRepository()) {}

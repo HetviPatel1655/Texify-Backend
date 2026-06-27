@@ -1,9 +1,9 @@
 import { Prisma } from "@prisma/client";
 
-import { prisma } from "../lib/prisma.js";
-import { createListQuery, type RepositoryListResult } from "../common/repositories/base.repository.js";
-import { formatDecimalValue } from "../common/utils/decimal.js";
-import type { GreyTPDto, GreyTPListQuery } from "./grey-tp.types.js";
+import { prisma } from "../lib/prisma";
+import { createListQuery, type RepositoryListResult } from "../common/repositories/base.repository";
+import { formatDecimalValue } from "../common/utils/decimal";
+import type { GreyTPDto, GreyTPListQuery } from "./grey-tp.types";
 
 const greyTPSelect = {
   id: true,

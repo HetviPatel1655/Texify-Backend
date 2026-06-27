@@ -1,5 +1,5 @@
-import { prisma } from "../lib/prisma.js";
-import { AppError } from "../common/errors/appError.js";
+import { prisma } from "../lib/prisma";
+import { AppError } from "../common/errors/appError";
 
 export type Feature =
   | "parties:create"

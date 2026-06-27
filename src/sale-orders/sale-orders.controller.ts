@@ -1,11 +1,11 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 
-import { asyncHandler } from "../common/middleware/asyncHandler.js";
-import { ApiResponse } from "../common/utils/apiResponse.js";
-import { AppError } from "../common/errors/appError.js";
-import { parseListQuery, toOptionalString } from "../common/utils/query.js";
-import { SaleOrdersService } from "./sale-orders.service.js";
+import { asyncHandler } from "../common/middleware/asyncHandler";
+import { ApiResponse } from "../common/utils/apiResponse";
+import { AppError } from "../common/errors/appError";
+import { parseListQuery, toOptionalString } from "../common/utils/query";
+import { SaleOrdersService } from "./sale-orders.service";
 
 const service = new SaleOrdersService();
 const idSchema = z.string().uuid();

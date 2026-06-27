@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { asyncHandler } from "../common/middleware/asyncHandler.js";
-import { authMiddleware } from "../auth/auth.middleware.js";
-import { featureGate } from "../feature-gate/feature-gate.middleware.js";
-import { downloadInvoicePdf, downloadChallanPdf } from "./pdf.controller.js";
+import { asyncHandler } from "../common/middleware/asyncHandler";
+import { authMiddleware } from "../auth/auth.middleware";
+import { featureGate } from "../feature-gate/feature-gate.middleware";
+import { downloadInvoicePdf, downloadChallanPdf } from "./pdf.controller";
 
 const pdfRouter = Router();
 

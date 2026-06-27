@@ -1,11 +1,11 @@
 import { Prisma } from "@prisma/client";
 
-import { prisma } from "../lib/prisma.js";
-import { createListQuery, type RepositoryListResult } from "../common/repositories/base.repository.js";
-import { buildSearchWhere } from "../common/utils/query.js";
-import { formatDecimalValue } from "../common/utils/decimal.js";
-import type { BeamSendDto, BeamSendItemDto, BeamSendListQuery } from "./beam-send-jobwork.types.js";
-import { beamSendSearchableFields } from "./beam-send-jobwork.constants.js";
+import { prisma } from "../lib/prisma";
+import { createListQuery, type RepositoryListResult } from "../common/repositories/base.repository";
+import { buildSearchWhere } from "../common/utils/query";
+import { formatDecimalValue } from "../common/utils/decimal";
+import type { BeamSendDto, BeamSendItemDto, BeamSendListQuery } from "./beam-send-jobwork.types";
+import { beamSendSearchableFields } from "./beam-send-jobwork.constants";
 
 const itemSelect = {
   id: true,

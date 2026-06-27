@@ -1,12 +1,12 @@
 import { Router } from "express";
 
-import { authMiddleware } from "../auth/auth.middleware.js";
-import { validateBody, validateQuery } from "../common/middleware/validateBody.js";
+import { authMiddleware } from "../auth/auth.middleware";
+import { validateBody, validateQuery } from "../common/middleware/validateBody";
 import {
   createBeamSendSchema,
   listBeamSendQuerySchema,
   updateBeamSendSchema,
-} from "./beam-send-jobwork.validators.js";
+} from "./beam-send-jobwork.validators";
 import {
   createBeamSend,
   deleteBeamSend,
@@ -14,7 +14,7 @@ import {
   getNextBeamSendNumber,
   listBeamSends,
   updateBeamSend,
-} from "./beam-send-jobwork.controller.js";
+} from "./beam-send-jobwork.controller";
 
 const router = Router();
 

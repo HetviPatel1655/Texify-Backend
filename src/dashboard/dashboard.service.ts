@@ -1,4 +1,4 @@
-import { prisma } from "../lib/prisma.js";
+import { prisma } from "../lib/prisma";
 
 function currentMonthRange(): { start: Date; end: Date } {
   const now = new Date();

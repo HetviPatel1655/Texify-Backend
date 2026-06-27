@@ -1,6 +1,6 @@
-import { prisma } from "../lib/prisma.js";
-import { env } from "../config/env.js";
-import { renewApiKey } from "./gstin-key-renewer.js";
+import { prisma } from "../lib/prisma";
+import { env } from "../config/env";
+import { renewApiKey } from "./gstin-key-renewer";
 
 const MAX_CALLS = 20;
 const MAX_DAYS = 30;

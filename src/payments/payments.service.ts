@@ -1,8 +1,8 @@
 import { Prisma } from "@prisma/client";
-import { prisma } from "../lib/prisma.js";
-import { AppError } from "../common/errors/appError.js";
-import { formatDecimalValue } from "../common/utils/decimal.js";
-import type { RecordPaymentDto, PaymentDto } from "./payments.types.js";
+import { prisma } from "../lib/prisma";
+import { AppError } from "../common/errors/appError";
+import { formatDecimalValue } from "../common/utils/decimal";
+import type { RecordPaymentDto, PaymentDto } from "./payments.types";
 
 interface PaymentContext {
   actorId: string;

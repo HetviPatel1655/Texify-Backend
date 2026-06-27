@@ -1,13 +1,13 @@
 import { Router } from "express";
 
-import { authMiddleware } from "../auth/auth.middleware.js";
-import { validateBody, validateQuery } from "../common/middleware/validateBody.js";
+import { authMiddleware } from "../auth/auth.middleware";
+import { validateBody, validateQuery } from "../common/middleware/validateBody";
 import {
   createTakaSchema,
   createMultiTakasSchema,
   listTakaQuerySchema,
   updateTakaSchema,
-} from "./takas.validators.js";
+} from "./takas.validators";
 import {
   createTaka,
   createMultiTakas,
@@ -19,7 +19,7 @@ import {
   getTakaStock,
   listTakas,
   updateTaka,
-} from "./takas.controller.js";
+} from "./takas.controller";
 
 const router = Router();
 

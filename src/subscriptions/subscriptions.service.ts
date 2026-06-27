@@ -1,8 +1,8 @@
-import { prisma } from "../lib/prisma.js";
-import { razorpay } from "../config/razorpay.js";
-import { env } from "../config/env.js";
-import { AppError } from "../common/errors/appError.js";
-import type { CreateSubscriptionDto, CancelSubscriptionDto } from "./subscriptions.types.js";
+import { prisma } from "../lib/prisma";
+import { razorpay } from "../config/razorpay";
+import { env } from "../config/env";
+import { AppError } from "../common/errors/appError";
+import type { CreateSubscriptionDto, CancelSubscriptionDto } from "./subscriptions.types";
 import crypto from "crypto";
 
 export const SubscriptionsService = {

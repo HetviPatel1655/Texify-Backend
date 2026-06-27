@@ -118,6 +118,11 @@ model Tenant {
   challanTakaEntries ChallanTakaEntry[]
   challanBeamEntries ChallanBeamEntry[]
   challanYarnEntries ChallanYarnEntry[]
+  yarnSendJobworks     YarnSendJobwork[]
+  yarnReceiveJobworks  YarnReceiveJobwork[]
+  paletteSendJobworks  PaletteSendJobwork[]
+  rollsSendJobworks    RollsSendJobwork[]
+  takaReceiveJobworks  TakaReceiveJobwork[]
 }
 
 model TenantUser {
@@ -223,6 +228,16 @@ model User {
   updatedGreyTPs         GreyTP[]          @relation("GreyTPUpdatedBy")
   createdReturnTakas     ReturnTaka[]      @relation("ReturnTakaCreatedBy")
   updatedReturnTakas     ReturnTaka[]      @relation("ReturnTakaUpdatedBy")
+  createdYarnSends       YarnSendJobwork[]    @relation("YarnSendCreatedBy")
+  updatedYarnSends       YarnSendJobwork[]    @relation("YarnSendUpdatedBy")
+  createdYarnReceives    YarnReceiveJobwork[] @relation("YarnReceiveCreatedBy")
+  updatedYarnReceives    YarnReceiveJobwork[] @relation("YarnReceiveUpdatedBy")
+  createdPaletteSends    PaletteSendJobwork[] @relation("PaletteSendCreatedBy")
+  updatedPaletteSends    PaletteSendJobwork[] @relation("PaletteSendUpdatedBy")
+  createdRollsSends      RollsSendJobwork[]   @relation("RollsSendCreatedBy")
+  updatedRollsSends      RollsSendJobwork[]   @relation("RollsSendUpdatedBy")
+  createdTakaReceives    TakaReceiveJobwork[] @relation("TakaReceiveCreatedBy")
+  updatedTakaReceives    TakaReceiveJobwork[] @relation("TakaReceiveUpdatedBy")
 }
 
 model Party {
@@ -269,6 +284,13 @@ model Party {
   beamSendParties    BeamSendJobwork[] @relation("BeamSendParty")
   takas              Taka[]            @relation("TakaFirm")
   returnTakas        ReturnTaka[]      @relation("ReturnTakaParty")
+  yarnSendFirms      YarnSendJobwork[]    @relation("YarnSendFirm")
+  yarnSendParties    YarnSendJobwork[]    @relation("YarnSendParty")
+  yarnReceiveParties YarnReceiveJobwork[] @relation("YarnReceiveParty")
+  paletteSendParties PaletteSendJobwork[] @relation("PaletteSendParty")
+  rollsSendParties   RollsSendJobwork[]   @relation("RollsSendParty")
+  takaReceiveFirms   TakaReceiveJobwork[] @relation("TakaReceiveFirm")
+  takaReceiveParties TakaReceiveJobwork[] @relation("TakaReceiveParty")
 
   @@unique([tenantId, code])
   @@unique([tenantId, gstin])
@@ -1115,4 +1137,242 @@ model ChallanYarnEntry {
   @@index([challanId])
   @@index([yarnPurchaseItemId])
   @@index([tenantId])
+}
+
+// ─── Phase 6: Jobwork Models ──────────────────────────────────────────
+
+model YarnSendJobwork {
+  id             String    @id @default(uuid())
+  tenantId       String
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  serialNumber   String
+  challanDate    DateTime  @default(now())
+  challanNo      String?
+  firmId         String?
+  firm           Party?    @relation("YarnSendFirm", fields: [firmId], references: [id], onDelete: SetNull)
+  partyId        String?
+  party          Party?    @relation("YarnSendParty", fields: [partyId], references: [id], onDelete: SetNull)
+  totalCartons   Int       @default(0)
+  totalCheese    Decimal   @default(0)
+  totalGrossWt   Decimal   @default(0)
+  totalTareWt    Decimal   @default(0)
+  totalNetWt     Decimal   @default(0)
+  goodsRate      Decimal   @default(0)
+  goodsAmount    Decimal   @default(0)
+  remarks        String?
+  deletedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  createdById    String?
+  updatedById    String?
+  createdBy      User?     @relation("YarnSendCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy      User?     @relation("YarnSendUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  items          YarnSendJobworkItem[]
+
+  @@unique([tenantId, serialNumber])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@index([firmId])
+  @@index([partyId])
+  @@index([challanDate])
+}
+
+model YarnSendJobworkItem {
+  id                 String          @id @default(uuid())
+  yarnSendJobworkId  String
+  yarnSendJobwork    YarnSendJobwork @relation(fields: [yarnSendJobworkId], references: [id], onDelete: Cascade)
+  cartonNo           String
+  itemName           String?
+  shadeName          String?
+  lotNo              String?
+  denier             String?
+  twist              String?
+  twistDirection     String?
+  cheese             Decimal         @default(0)
+  grossWt            Decimal         @default(0)
+  tareWt             Decimal         @default(0)
+  netWt              Decimal         @default(0)
+  remarks            String?
+  sortOrder          Int             @default(0)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([yarnSendJobworkId])
+}
+
+model YarnReceiveJobwork {
+  id                  String    @id @default(uuid())
+  tenantId            String
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  serialNumber        String
+  challanDate         DateTime  @default(now())
+  challanNo           String?
+  partyId             String?
+  party               Party?    @relation("YarnReceiveParty", fields: [partyId], references: [id], onDelete: SetNull)
+  yarnName            String?
+  shadeName           String?
+  emptyRollWt         Decimal   @default(0)
+  lotNo               String?
+  denier              String?
+  twist               String?
+  cages               Int       @default(0)
+  rolls               Int       @default(0)
+  grossWt             Decimal   @default(0)
+  tareWt              Decimal   @default(0)
+  netWt               Decimal   @default(0)
+  goodsRate           Decimal   @default(0)
+  goodsAmount         Decimal   @default(0)
+  deptName            String?
+  originalChallanNo   String?
+  originalChallanDate DateTime?
+  remarks             String?
+  deletedAt           DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  createdById         String?
+  updatedById         String?
+  createdBy           User?     @relation("YarnReceiveCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy           User?     @relation("YarnReceiveUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, serialNumber])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@index([partyId])
+  @@index([challanDate])
+}
+
+model PaletteSendJobwork {
+  id             String    @id @default(uuid())
+  tenantId       String
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  serialNumber   String
+  challanDate    DateTime  @default(now())
+  challanNo      String?
+  partyId        String?
+  party          Party?    @relation("PaletteSendParty", fields: [partyId], references: [id], onDelete: SetNull)
+  paletteNo      String?
+  denier         String?
+  yarnName       String?
+  cheese         Decimal   @default(0)
+  lotNo          String?
+  netWt          Decimal   @default(0)
+  amount         Decimal   @default(0)
+  pendingCheese  Decimal   @default(0)
+  issueCheese    Decimal   @default(0)
+  pendingNetWt   Decimal   @default(0)
+  issueNetWt     Decimal   @default(0)
+  remarks        String?
+  deletedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  createdById    String?
+  updatedById    String?
+  createdBy      User?     @relation("PaletteSendCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy      User?     @relation("PaletteSendUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, serialNumber])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@index([partyId])
+  @@index([challanDate])
+}
+
+model RollsSendJobwork {
+  id             String    @id @default(uuid())
+  tenantId       String
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  serialNumber   String
+  challanDate    DateTime  @default(now())
+  challanNo      String?
+  partyId        String?
+  party          Party?    @relation("RollsSendParty", fields: [partyId], references: [id], onDelete: SetNull)
+  yarnName       String?
+  lotNo          String?
+  cages          Int       @default(0)
+  rolls          Int       @default(0)
+  grossWt        Decimal   @default(0)
+  tareWt         Decimal   @default(0)
+  netWt          Decimal   @default(0)
+  emptyRollWt    Decimal   @default(0)
+  remarks        String?
+  deletedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  createdById    String?
+  updatedById    String?
+  createdBy      User?     @relation("RollsSendCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy      User?     @relation("RollsSendUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, serialNumber])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@index([partyId])
+  @@index([challanDate])
+}
+
+model TakaReceiveJobwork {
+  id                  String    @id @default(uuid())
+  tenantId            String
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  serialNumber        String
+  challanDate         DateTime  @default(now())
+  challanNo           String?
+  partyId             String?
+  party               Party?    @relation("TakaReceiveParty", fields: [partyId], references: [id], onDelete: SetNull)
+  firmId              String?
+  firm                Party?    @relation("TakaReceiveFirm", fields: [firmId], references: [id], onDelete: SetNull)
+  qualityName         String?
+  takaPrefix          String?
+  lotNo               String?
+  withBeam            Boolean   @default(false)
+  totalTakas          Int       @default(0)
+  totalMeters         Decimal   @default(0)
+  totalWeight         Decimal   @default(0)
+  totalSarees         Int       @default(0)
+  originalChallanNo   String?
+  originalChallanDate DateTime?
+  goodsRate           Decimal   @default(0)
+  goodsAmount         Decimal   @default(0)
+  remarks             String?
+  deletedAt           DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  createdById         String?
+  updatedById         String?
+  createdBy           User?     @relation("TakaReceiveCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy           User?     @relation("TakaReceiveUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  items               TakaReceiveJobworkItem[]
+
+  @@unique([tenantId, serialNumber])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@index([partyId])
+  @@index([firmId])
+  @@index([challanDate])
+}
+
+model TakaReceiveJobworkItem {
+  id                    String             @id @default(uuid())
+  takaReceiveJobworkId  String
+  takaReceiveJobwork    TakaReceiveJobwork @relation(fields: [takaReceiveJobworkId], references: [id], onDelete: Cascade)
+  takaNo                String
+  loomNo                String?
+  meters                Decimal            @default(0)
+  weight                Decimal            @default(0)
+  itemName              String?
+  avgWeight             Decimal            @default(0)
+  shouldBeWeight        Decimal            @default(0)
+  weightDiff            Decimal            @default(0)
+  grade                 String?
+  designNo              String?
+  shadeName             String?
+  beamTakaNo            String?
+  cut                   String?
+  sarees                Int                @default(0)
+  remarks               String?
+  sortOrder             Int                @default(0)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  @@index([takaReceiveJobworkId])
 }

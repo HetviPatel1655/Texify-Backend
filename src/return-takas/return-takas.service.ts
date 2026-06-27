@@ -1,9 +1,9 @@
-import { prisma } from "../lib/prisma.js";
-import { AppError } from "../common/errors/appError.js";
-import type { CrudContext } from "../common/services/baseCrud.service.js";
-import type { RepositoryListResult } from "../common/repositories/base.repository.js";
-import { ReturnTakasRepository } from "./return-takas.repository.js";
-import type { CreateReturnTakaDto, ReturnTakaDto, ReturnTakaListQuery, UpdateReturnTakaDto } from "./return-takas.types.js";
+import { prisma } from "../lib/prisma";
+import { AppError } from "../common/errors/appError";
+import type { CrudContext } from "../common/services/baseCrud.service";
+import type { RepositoryListResult } from "../common/repositories/base.repository";
+import { ReturnTakasRepository } from "./return-takas.repository";
+import type { CreateReturnTakaDto, ReturnTakaDto, ReturnTakaListQuery, UpdateReturnTakaDto } from "./return-takas.types";
 
 export class ReturnTakasService {
   constructor(private readonly repository = new ReturnTakasRepository()) {}

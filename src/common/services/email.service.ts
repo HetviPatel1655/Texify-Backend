@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
-import { env } from "../../config/env.js";
-import { AppError } from "../errors/appError.js";
+import { env } from "../../config/env";
+import { AppError } from "../errors/appError";
 
 function createTransporter() {
   if (!env.SMTP_USER || !env.SMTP_PASS) {

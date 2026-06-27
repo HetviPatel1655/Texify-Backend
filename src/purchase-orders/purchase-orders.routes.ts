@@ -1,12 +1,12 @@
 import { Router } from "express";
 
-import { authMiddleware } from "../auth/auth.middleware.js";
-import { validateBody, validateQuery } from "../common/middleware/validateBody.js";
+import { authMiddleware } from "../auth/auth.middleware";
+import { validateBody, validateQuery } from "../common/middleware/validateBody";
 import {
   createPurchaseOrderSchema,
   listPurchaseOrderQuerySchema,
   updatePurchaseOrderSchema,
-} from "./purchase-orders.validators.js";
+} from "./purchase-orders.validators";
 import {
   createPurchaseOrder,
   deletePurchaseOrder,
@@ -14,7 +14,7 @@ import {
   getPurchaseOrderById,
   listPurchaseOrders,
   updatePurchaseOrder,
-} from "./purchase-orders.controller.js";
+} from "./purchase-orders.controller";
 
 const router = Router();
 

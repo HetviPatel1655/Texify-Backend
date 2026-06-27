@@ -1,6 +1,6 @@
-import { prisma } from "../lib/prisma.js";
-import { formatDecimalValue } from "../common/utils/decimal.js";
-import type { YarnStockQuery, YarnStockLineDto, YarnStockSummaryDto } from "./yarn-stock.types.js";
+import { prisma } from "../lib/prisma";
+import { formatDecimalValue } from "../common/utils/decimal";
+import type { YarnStockQuery, YarnStockLineDto, YarnStockSummaryDto } from "./yarn-stock.types";
 
 export async function getYarnStock(
   tenantId: string,

@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { FeatureGateService, type Feature } from "./feature-gate.service.js";
+import { FeatureGateService, type Feature } from "./feature-gate.service";
 
 export function featureGate(feature: Feature) {
   return async (req: Request, _res: Response, next: NextFunction) => {

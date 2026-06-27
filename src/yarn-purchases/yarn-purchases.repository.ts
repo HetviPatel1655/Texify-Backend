@@ -1,11 +1,11 @@
 import { Prisma } from "@prisma/client";
 
-import { prisma } from "../lib/prisma.js";
-import { createListQuery, type RepositoryListResult } from "../common/repositories/base.repository.js";
-import { buildSearchWhere } from "../common/utils/query.js";
-import { formatDecimalValue } from "../common/utils/decimal.js";
-import type { YarnPurchaseDto, YarnPurchaseItemDto, YarnPurchaseListQuery } from "./yarn-purchases.types.js";
-import { yarnPurchaseSearchableFields } from "./yarn-purchases.constants.js";
+import { prisma } from "../lib/prisma";
+import { createListQuery, type RepositoryListResult } from "../common/repositories/base.repository";
+import { buildSearchWhere } from "../common/utils/query";
+import { formatDecimalValue } from "../common/utils/decimal";
+import type { YarnPurchaseDto, YarnPurchaseItemDto, YarnPurchaseListQuery } from "./yarn-purchases.types";
+import { yarnPurchaseSearchableFields } from "./yarn-purchases.constants";
 
 const yarnPurchaseSelect = {
   id: true,

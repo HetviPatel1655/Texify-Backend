@@ -1,9 +1,9 @@
-import { prisma } from "../lib/prisma.js";
-import { AppError } from "../common/errors/appError.js";
-import type { CrudContext } from "../common/services/baseCrud.service.js";
-import type { RepositoryListResult } from "../common/repositories/base.repository.js";
-import { GreyTPRepository } from "./grey-tp.repository.js";
-import type { CreateGreyTPDto, GreyTPDto, GreyTPListQuery, UpdateGreyTPDto } from "./grey-tp.types.js";
+import { prisma } from "../lib/prisma";
+import { AppError } from "../common/errors/appError";
+import type { CrudContext } from "../common/services/baseCrud.service";
+import type { RepositoryListResult } from "../common/repositories/base.repository";
+import { GreyTPRepository } from "./grey-tp.repository";
+import type { CreateGreyTPDto, GreyTPDto, GreyTPListQuery, UpdateGreyTPDto } from "./grey-tp.types";
 
 export class GreyTPService {
   constructor(private readonly repository = new GreyTPRepository()) {}

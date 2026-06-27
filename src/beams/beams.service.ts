@@ -1,13 +1,13 @@
-import { AppError } from "../common/errors/appError.js";
-import type { CrudContext } from "../common/services/baseCrud.service.js";
-import type { RepositoryListResult } from "../common/repositories/base.repository.js";
-import { BeamsRepository } from "./beams.repository.js";
+import { AppError } from "../common/errors/appError";
+import type { CrudContext } from "../common/services/baseCrud.service";
+import type { RepositoryListResult } from "../common/repositories/base.repository";
+import { BeamsRepository } from "./beams.repository";
 import type {
   CreateBeamDto,
   BeamDto,
   BeamListQuery,
   UpdateBeamDto,
-} from "./beams.types.js";
+} from "./beams.types";
 
 export class BeamsService {
   constructor(private readonly repository = new BeamsRepository()) {}

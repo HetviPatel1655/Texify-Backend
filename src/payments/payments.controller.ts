@@ -1,9 +1,9 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 
-import { asyncHandler } from "../common/middleware/asyncHandler.js";
-import { ApiResponse } from "../common/utils/apiResponse.js";
-import { PaymentsService } from "./payments.service.js";
+import { asyncHandler } from "../common/middleware/asyncHandler";
+import { ApiResponse } from "../common/utils/apiResponse";
+import { PaymentsService } from "./payments.service";
 
 const paymentsService = new PaymentsService();
 const idSchema = z.string().uuid();

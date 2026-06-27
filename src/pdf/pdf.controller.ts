@@ -1,11 +1,11 @@
 import type { Request, Response } from "express";
-import { AppError } from "../common/errors/appError.js";
-import { InvoicesService } from "../invoices/invoices.service.js";
-import { ChallansService } from "../challans/challans.service.js";
-import { CompanyProfileService } from "../company-profile/company-profile.service.js";
-import { htmlToPdf } from "./pdf.service.js";
-import { buildInvoiceHtml } from "./invoice-template.js";
-import { buildChallanHtml } from "./challan-template.js";
+import { AppError } from "../common/errors/appError";
+import { InvoicesService } from "../invoices/invoices.service";
+import { ChallansService } from "../challans/challans.service";
+import { CompanyProfileService } from "../company-profile/company-profile.service";
+import { htmlToPdf } from "./pdf.service";
+import { buildInvoiceHtml } from "./invoice-template";
+import { buildChallanHtml } from "./challan-template";
 
 const invoicesService = new InvoicesService();
 const challansService = new ChallansService();

@@ -1,12 +1,12 @@
 import { Router } from "express";
 
-import { authMiddleware } from "../auth/auth.middleware.js";
-import { validateBody, validateQuery } from "../common/middleware/validateBody.js";
+import { authMiddleware } from "../auth/auth.middleware";
+import { validateBody, validateQuery } from "../common/middleware/validateBody";
 import {
   createYarnPurchaseSchema,
   listYarnPurchaseQuerySchema,
   updateYarnPurchaseSchema,
-} from "./yarn-purchases.validators.js";
+} from "./yarn-purchases.validators";
 import {
   createYarnPurchase,
   deleteYarnPurchase,
@@ -17,7 +17,7 @@ import {
   listYarnPurchases,
   lookupCarton,
   updateYarnPurchase,
-} from "./yarn-purchases.controller.js";
+} from "./yarn-purchases.controller";
 
 const router = Router();
 

@@ -1,8 +1,8 @@
-import { AppError } from "../common/errors/appError.js";
-import type { CrudContext } from "../common/services/baseCrud.service.js";
-import type { RepositoryListResult } from "../common/repositories/base.repository.js";
-import { TakasRepository } from "./takas.repository.js";
-import type { CreateTakaDto, TakaDto, TakaListQuery, UpdateTakaDto } from "./takas.types.js";
+import { AppError } from "../common/errors/appError";
+import type { CrudContext } from "../common/services/baseCrud.service";
+import type { RepositoryListResult } from "../common/repositories/base.repository";
+import { TakasRepository } from "./takas.repository";
+import type { CreateTakaDto, TakaDto, TakaListQuery, UpdateTakaDto } from "./takas.types";
 
 export class TakasService {
   constructor(private readonly repository = new TakasRepository()) {}

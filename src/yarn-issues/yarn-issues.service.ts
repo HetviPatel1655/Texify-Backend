@@ -1,13 +1,13 @@
-import { AppError } from "../common/errors/appError.js";
-import type { CrudContext } from "../common/services/baseCrud.service.js";
-import type { RepositoryListResult } from "../common/repositories/base.repository.js";
-import { YarnIssuesRepository } from "./yarn-issues.repository.js";
+import { AppError } from "../common/errors/appError";
+import type { CrudContext } from "../common/services/baseCrud.service";
+import type { RepositoryListResult } from "../common/repositories/base.repository";
+import { YarnIssuesRepository } from "./yarn-issues.repository";
 import type {
   CreateYarnIssueDto,
   YarnIssueDto,
   YarnIssueListQuery,
   UpdateYarnIssueDto,
-} from "./yarn-issues.types.js";
+} from "./yarn-issues.types";
 
 export class YarnIssuesService {
   constructor(private readonly repository = new YarnIssuesRepository()) {}

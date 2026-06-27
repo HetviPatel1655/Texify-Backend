@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { authMiddleware } from "../auth/auth.middleware.js";
-import { getUsage } from "./feature-gate.controller.js";
+import { authMiddleware } from "../auth/auth.middleware";
+import { getUsage } from "./feature-gate.controller";
 
 const featureGateRouter = Router();
 

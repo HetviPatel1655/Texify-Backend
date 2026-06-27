@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { asyncHandler } from "../common/middleware/asyncHandler.js";
-import { authMiddleware } from "../auth/auth.middleware.js";
-import { featureGate } from "../feature-gate/feature-gate.middleware.js";
-import { getGstinDetails, updateGstinApiKey, getGstinKeyStatus } from "./gstin-lookup.controller.js";
+import { asyncHandler } from "../common/middleware/asyncHandler";
+import { authMiddleware } from "../auth/auth.middleware";
+import { featureGate } from "../feature-gate/feature-gate.middleware";
+import { getGstinDetails, updateGstinApiKey, getGstinKeyStatus } from "./gstin-lookup.controller";
 
 const gstinLookupRouter = Router();
 

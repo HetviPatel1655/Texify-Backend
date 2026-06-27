@@ -1,12 +1,12 @@
 import { Router } from "express";
 
-import { authMiddleware } from "../auth/auth.middleware.js";
-import { validateBody, validateQuery } from "../common/middleware/validateBody.js";
+import { authMiddleware } from "../auth/auth.middleware";
+import { validateBody, validateQuery } from "../common/middleware/validateBody";
 import {
   createSaleOrderSchema,
   listSaleOrderQuerySchema,
   updateSaleOrderSchema,
-} from "./sale-orders.validators.js";
+} from "./sale-orders.validators";
 import {
   createSaleOrder,
   deleteSaleOrder,
@@ -14,7 +14,7 @@ import {
   getSaleOrderById,
   listSaleOrders,
   updateSaleOrder,
-} from "./sale-orders.controller.js";
+} from "./sale-orders.controller";
 
 const router = Router();
 
