@@ -18,7 +18,11 @@ import { takaReceiveJobworkRouter } from "../../taka-receive-jobwork/taka-receiv
 import { takasRouter } from "../../takas/takas.routes";
 import { greyTPRouter } from "../../grey-tp/grey-tp.routes";
 import { returnTakasRouter } from "../../return-takas/return-takas.routes";
+import { bankEntriesRouter } from "../../bank-entries/bank-entries.routes";
+import { employeesRouter } from "../../employees/employees.routes";
+import { attendanceRouter } from "../../attendance/attendance.routes";
 import { dashboardRouter } from "../../dashboard/dashboard.routes";
+import { reportsRouter } from "../../reports/reports.routes";
 
 const erpRouter = Router();
 
@@ -41,5 +45,9 @@ erpRouter.use("/taka-receive-jobwork", takaReceiveJobworkRouter);
 erpRouter.use("/takas", takasRouter);
 erpRouter.use("/grey-tp", greyTPRouter);
 erpRouter.use("/return-takas", returnTakasRouter);
+erpRouter.use("/bank-entries", bankEntriesRouter);
+erpRouter.use("/employees", employeesRouter);
+erpRouter.use("/attendance", attendanceRouter);
+erpRouter.use("/reports", reportsRouter);
 
 export { erpRouter };

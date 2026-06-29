@@ -72,6 +72,26 @@ enum ChallanType {
   YARN_SALE
 }
 
+enum BankEntryType {
+  SLIP
+  CHEQUE
+}
+
+enum EmployeeType {
+  WEAVER
+  HELPER
+  SUPERVISOR
+  WINDER
+  WARPER
+  OTHER
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+}
+
 enum PaymentMethod {
   CASH
   CHEQUE
@@ -123,6 +143,9 @@ model Tenant {
   paletteSendJobworks  PaletteSendJobwork[]
   rollsSendJobworks    RollsSendJobwork[]
   takaReceiveJobworks  TakaReceiveJobwork[]
+  bankEntries          BankEntry[]
+  employees            Employee[]
+  attendances          Attendance[]
 }
 
 model TenantUser {
@@ -238,6 +261,10 @@ model User {
   updatedRollsSends      RollsSendJobwork[]   @relation("RollsSendUpdatedBy")
   createdTakaReceives    TakaReceiveJobwork[] @relation("TakaReceiveCreatedBy")
   updatedTakaReceives    TakaReceiveJobwork[] @relation("TakaReceiveUpdatedBy")
+  createdBankEntries     BankEntry[]          @relation("BankEntryCreatedBy")
+  updatedBankEntries     BankEntry[]          @relation("BankEntryUpdatedBy")
+  createdEmployees       Employee[]           @relation("EmployeeCreatedBy")
+  updatedEmployees       Employee[]           @relation("EmployeeUpdatedBy")
 }
 
 model Party {
@@ -291,6 +318,7 @@ model Party {
   rollsSendParties   RollsSendJobwork[]   @relation("RollsSendParty")
   takaReceiveFirms   TakaReceiveJobwork[] @relation("TakaReceiveFirm")
   takaReceiveParties TakaReceiveJobwork[] @relation("TakaReceiveParty")
+  bankEntries        BankEntry[]
 
   @@unique([tenantId, code])
   @@unique([tenantId, gstin])
@@ -402,8 +430,9 @@ model Invoice {
   updatedById     String?
   createdBy       User?         @relation("InvoiceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   updatedBy       User?         @relation("InvoiceUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-  items           InvoiceItem[]
-  payments        Payment[]
+  items                InvoiceItem[]
+  payments             Payment[]
+  bankEntryAdjustments BankEntryAdjustment[]
 
   @@unique([tenantId, invoiceNumber])
   @@unique([tenantId, seriesCode, sequenceNumber, fiscalYear])
@@ -1375,4 +1404,91 @@ model TakaReceiveJobworkItem {
   updatedAt             DateTime           @updatedAt
 
   @@index([takaReceiveJobworkId])
+}
+
+model BankEntry {
+  id               String        @id @default(uuid())
+  tenantId         String
+  tenant           Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  serialNumber     String
+  type             BankEntryType
+  entryDate        DateTime      @default(now())
+  slipRecNo        String?
+  bankName         String
+  partyId          String
+  party            Party         @relation(fields: [partyId], references: [id], onDelete: Restrict)
+  chequeNo         String?
+  chequeDate       DateTime?
+  amount           Decimal       @default(0)
+  remarks          String?
+  billWisePayment  Boolean       @default(false)
+  unadjustedAmount Decimal       @default(0)
+  deletedAt        DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  createdById      String?
+  updatedById      String?
+  createdBy        User?         @relation("BankEntryCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy        User?         @relation("BankEntryUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  adjustments      BankEntryAdjustment[]
+
+  @@unique([tenantId, serialNumber])
+  @@index([tenantId, deletedAt])
+  @@index([type])
+  @@index([partyId])
+  @@index([entryDate])
+}
+
+model BankEntryAdjustment {
+  id          String    @id @default(uuid())
+  bankEntryId String
+  bankEntry   BankEntry @relation(fields: [bankEntryId], references: [id], onDelete: Cascade)
+  invoiceId   String
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  amount      Decimal
+
+  @@index([bankEntryId])
+  @@index([invoiceId])
+}
+
+model Employee {
+  id           String       @id @default(uuid())
+  tenantId     String
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name         String
+  employeeType EmployeeType @default(OTHER)
+  dailyRate    Decimal      @default(0)
+  isActive     Boolean      @default(true)
+  deletedAt    DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  createdById  String?
+  updatedById  String?
+  createdBy    User?        @relation("EmployeeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy    User?        @relation("EmployeeUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  attendances  Attendance[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@index([employeeType])
+  @@index([isActive])
+}
+
+model Attendance {
+  id         String           @id @default(uuid())
+  tenantId   String
+  tenant     Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date       DateTime         @db.Date
+  status     AttendanceStatus
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@unique([tenantId, employeeId, date])
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([date])
+  @@index([tenantId, date])
 }
