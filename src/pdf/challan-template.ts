@@ -59,7 +59,7 @@ const DEFAULT_NOTE = "(1) NO DYEING GUARANTEE. (2) Complaint if any regarding th
 const B = "1.7px solid #000";
 const FONT = "'Times New Roman', Times, serif";
 
-function buildRollGrid(entries: RollEntry[], rowsPerColumn: number): string {
+function buildRollGrid(entries: RollEntry[], rowsPerColumn: number, compact?: boolean): string {
   const numCols = Math.max(1, Math.ceil(entries.length / rowsPerColumn));
   const columns: RollEntry[][] = [];
   for (let c = 0; c < numCols; c++) {
@@ -74,9 +74,12 @@ function buildRollGrid(entries: RollEntry[], rowsPerColumn: number): string {
     `<col style="width:${srW}%"/><col style="width:${mW}%"/>`
   ).join("");
 
+  const hPad = "2px 10px 2px 4px";
+  const hPadL = "2px 4px 2px 8px";
+
   const headerCells = columns.map(() =>
-    `<th style="border-top:${B};border-bottom:${B};border-left:${B};padding:2px 4px 2px 8px;text-align:left;font-weight:bold">Sr. No.</th>
-     <th style="border-top:${B};border-bottom:${B};border-right:${B};padding:2px 10px 2px 4px;text-align:right;font-weight:bold">Meters</th>`
+    `<th style="border-top:${B};border-bottom:${B};border-left:${B};padding:${hPadL};text-align:left;font-weight:bold">Sr. No.</th>
+     <th style="border-top:${B};border-bottom:${B};border-right:${B};padding:${hPad};text-align:right;font-weight:bold">Meters</th>`
   ).join("");
 
   let bodyRows = "";
@@ -86,7 +89,7 @@ function buildRollGrid(entries: RollEntry[], rowsPerColumn: number): string {
       return `<td style="border-left:${B};padding:1px 4px 1px 8px">${entry ? entry.serialNumber : " "}</td>
               <td style="border-right:${B};padding:1px 10px 1px 4px;text-align:right">${entry ? entry.meters.toFixed(2) : " "}</td>`;
     }).join("");
-    bodyRows += `<tr>${cells}</tr>`;
+    bodyRows += `<tr${compact ? ' style="line-height:1.2"' : ""}>${cells}</tr>`;
   }
 
   const footCells = columns.map(group => {
@@ -103,7 +106,7 @@ function buildRollGrid(entries: RollEntry[], rowsPerColumn: number): string {
   </table>`;
 }
 
-function buildSingleChallan(data: ChallanPdfData): string {
+function buildSingleChallan(data: ChallanPdfData, compact?: boolean): string {
   const { challan: ch, company: co } = data;
   const party = ch.party;
   const firstItem = ch.items[0];
@@ -123,35 +126,37 @@ function buildSingleChallan(data: ChallanPdfData): string {
     ch.deliveryState || party?.billingState,
   ].filter(Boolean).join(" "));
 
+  const pad = compact ? "2px 6px" : "4px 6px";
+
   const rollGridHtml = rollEntries.length > 0
-    ? `<div style="margin-top:-1px">${buildRollGrid(rollEntries, data.rowsPerColumn)}</div>`
+    ? `<div style="margin-top:-1px">${buildRollGrid(rollEntries, data.rowsPerColumn, compact)}</div>`
     : "";
 
-  return `<div style="font-family:${FONT};font-size:12px;color:#000;line-height:1.4">
+  return `<div style="font-family:${FONT};font-size:12px;color:#000;line-height:${compact ? 1.35 : 1.4}">
     <div style="font-weight:bold;font-size:15px">Delivery Challan</div>
     <div style="text-align:center;font-size:24px;font-weight:bold;letter-spacing:2px">${esc(co?.companyName)}</div>
     <div style="text-align:center;font-size:12px;width:100%">${companyAddr}</div>
-    <div style="display:flex;font-size:12px;margin-top:2px">
+    <div style="display:flex;font-size:12px;margin-top:${compact ? "0px" : "2px"}">
       <span style="flex:1"><b>Phone :</b>&nbsp;${esc(co?.phone)}</span>
       <span style="flex:1;text-align:center;font-weight:bold">${esc(co?.city)}</span>
       <span style="flex:1">&nbsp;</span>
     </div>
-    <div style="font-size:12px;margin-bottom:2px"><b>GST No :</b>&nbsp;&nbsp;${esc(co?.gstin)}</div>
+    <div style="font-size:12px;margin-bottom:${compact ? "0px" : "2px"}"><b>GST No :</b>&nbsp;&nbsp;${esc(co?.gstin)}</div>
 
     <table style="width:100%;border-collapse:collapse;border:${B};font-size:12px"><tbody><tr>
-      <td style="border:${B};padding:4px 6px;vertical-align:top;width:40%">
+      <td style="border:${B};padding:${compact ? "3px 6px" : pad};vertical-align:top;width:40%">
         <div><b>Party :</b>&nbsp;&nbsp;<b>${esc(party?.name)}</b></div>
         ${partyAddr ? `<div>${partyAddr},</div>` : ""}
         ${partyCityLine ? `<div>${partyCityLine}${party?.phone ? ` Phone: ${esc(party.phone)}` : ""}</div>` : ""}
-        <div style="margin-top:4px"><b>GST No :</b>&nbsp;&nbsp;<b>${esc(party?.gstin)}</b></div>
+        <div style="margin-top:${compact ? "2px" : "4px"}"><b>GST No :</b>&nbsp;&nbsp;<b>${esc(party?.gstin)}</b></div>
       </td>
-      <td style="border:${B};padding:4px 6px;vertical-align:top;width:35%">
+      <td style="border:${B};padding:${compact ? "3px 6px" : pad};vertical-align:top;width:35%">
         <div><b>Delivery at :</b>&nbsp;&nbsp;<b>${esc(ch.deliveryPartyName ?? party?.name)}</b></div>
         ${delAddr ? `<div>${delAddr},</div>` : ""}
         ${delCityLine ? `<div>${delCityLine}</div>` : ""}
-        <div style="margin-top:4px"><b>GST No :</b>&nbsp;&nbsp;<b>${esc(ch.deliveryGstin ?? party?.gstin)}</b></div>
+        <div style="margin-top:${compact ? "2px" : "4px"}"><b>GST No :</b>&nbsp;&nbsp;<b>${esc(ch.deliveryGstin ?? party?.gstin)}</b></div>
       </td>
-      <td style="border:${B};padding:4px 6px;vertical-align:top;width:25%">
+      <td style="border:${B};padding:${compact ? "3px 6px" : pad};vertical-align:top;width:25%">
         <div><b>Challan No :</b>&nbsp;&nbsp;<b>${String(ch.sequenceNumber).padStart(3, "0")}</b></div>
         <div><b>Challan Date :</b>&nbsp;&nbsp;${fmtDate(ch.issueDate)}</div>
         ${ch.agentName ? `<div><b>Broker Name :</b>&nbsp;&nbsp;${esc(ch.agentName)}</div>` : ""}
@@ -161,7 +166,7 @@ function buildSingleChallan(data: ChallanPdfData): string {
     ${rollGridHtml}
 
     <table style="width:100%;border-collapse:collapse;border:${B};font-size:12px;margin-top:-1px"><tbody>
-      ${firstItem ? `<tr><td colspan="2" style="border-bottom:${B};padding:3px 6px">
+      ${firstItem ? `<tr><td colspan="2" style="border-bottom:${B};padding:${compact ? "2px 6px" : "3px 6px"}">
         <b>Item:</b>&nbsp;&nbsp;&nbsp;&nbsp;${esc(firstItem.description)}
         <span style="margin-left:40px"><b>Total Takas :</b>&nbsp;&nbsp;&nbsp;&nbsp;${ch.totalTakas}</span>
         <span style="margin-left:40px"><b>Total Meters :</b>&nbsp;&nbsp;&nbsp;&nbsp;${ch.totalMeters.toFixed(2)}</span>
@@ -170,10 +175,10 @@ function buildSingleChallan(data: ChallanPdfData): string {
         <td style="border-bottom:${B};padding:2px 6px;width:50%"><b>Remark :</b>&nbsp;${esc(ch.remark)}</td>
         <td style="border-bottom:${B};padding:2px 6px;width:50%"><b>VehicleNo :</b>&nbsp;${esc(ch.vehicleNumber)}</td>
       </tr>
-      <tr><td colspan="2" style="padding:4px 6px;font-size:12px;line-height:1.5"><b>Note :</b> ${noteInline}</td></tr>
+      <tr><td colspan="2" style="padding:${compact ? "3px 6px" : "4px 6px"};font-size:12px;line-height:${compact ? 1.35 : 1.5}"><b>Note :</b> ${noteInline}</td></tr>
     </tbody></table>
 
-    <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:20px;padding:0 10px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:${compact ? "10px" : "20px"};padding:0 10px">
       <div style="display:flex;align-items:flex-end"><b>Receiver's Signature</b><span style="border-bottom:1px solid #000;width:180px;display:inline-block;margin-left:8px">&nbsp;</span></div>
       <div style="display:flex;align-items:flex-end"><b>Prepared by</b><span style="border-bottom:1px solid #000;width:180px;display:inline-block;margin-left:8px">&nbsp;</span></div>
     </div>
@@ -181,16 +186,27 @@ function buildSingleChallan(data: ChallanPdfData): string {
 }
 
 export function buildChallanHtml(data: ChallanPdfData): string {
-  const single = buildSingleChallan(data);
-  const duplicateSection = data.duplicate
-    ? `<div style="border-top:2px dashed #999;margin:8px 0"></div>${buildSingleChallan(data)}`
-    : "";
+  const rollCount = data.challan.items[0]?.rollEntries?.length ?? 0;
+  const needsPageBreak = data.duplicate && rollCount > 15;
+  const compact = data.duplicate && !needsPageBreak;
+
+  const single = buildSingleChallan(data, compact);
+
+  let duplicateSection = "";
+  if (data.duplicate) {
+    if (needsPageBreak) {
+      duplicateSection = `<div style="page-break-before:always">${buildSingleChallan(data)}</div>`;
+    } else {
+      duplicateSection = `<div style="border-top:2px dashed #999;margin:2px 0"></div>${buildSingleChallan(data, true)}`;
+    }
+  }
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"/>
 <style>
   @page { size: A4 portrait; margin: 6mm 8mm; }
   html, body { margin:0; padding:0; }
+  table { box-sizing: border-box; }
 </style>
 </head><body style="font-family:${FONT}">
 ${single}
