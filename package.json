@@ -6,8 +6,8 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "node --stack-size=8192 ./node_modules/typescript/lib/tsc.js -p tsconfig.json",
-    "typecheck": "node --stack-size=8192 ./node_modules/typescript/lib/tsc.js --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
