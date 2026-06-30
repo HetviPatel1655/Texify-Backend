@@ -1,6 +1,5 @@
 node_modules
 dist
-src/generated
 .env.local
 .env.*.local
 .DS_Store

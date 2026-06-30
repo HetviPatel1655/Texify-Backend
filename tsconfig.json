@@ -4,7 +4,7 @@
     "module": "CommonJS",
     "moduleResolution": "Node",
     "paths": {
-      "@prisma/client": ["./src/generated/prisma/client"]
+      "@prisma/client": ["./node_modules/.prisma/client"]
     },
     "rootDir": "src",
     "outDir": "dist",
