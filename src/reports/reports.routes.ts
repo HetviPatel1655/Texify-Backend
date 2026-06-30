@@ -10,6 +10,8 @@ import {
   rollsIssueReportSchema,
   takaReceivedReportSchema,
   yarnSaleChallanReportSchema,
+  saleOutstandingReportSchema,
+  purchaseOutstandingReportSchema,
 } from "./reports.validators";
 import {
   getBeamCardReport,
@@ -20,6 +22,8 @@ import {
   getRollsIssueReport,
   getTakaReceivedReport,
   getYarnSaleChallanReport,
+  getSaleOutstandingReport,
+  getPurchaseOutstandingReport,
 } from "./reports.controller";
 
 const reportsRouter = Router();
@@ -34,5 +38,7 @@ reportsRouter.get("/yarn-receive", validateQuery(yarnReceiveReportSchema), getYa
 reportsRouter.get("/rolls-issue", validateQuery(rollsIssueReportSchema), getRollsIssueReport);
 reportsRouter.get("/taka-received", validateQuery(takaReceivedReportSchema), getTakaReceivedReport);
 reportsRouter.get("/yarn-sale-challan", validateQuery(yarnSaleChallanReportSchema), getYarnSaleChallanReport);
+reportsRouter.get("/sale-outstanding", validateQuery(saleOutstandingReportSchema), getSaleOutstandingReport);
+reportsRouter.get("/purchase-outstanding", validateQuery(purchaseOutstandingReportSchema), getPurchaseOutstandingReport);
 
 export { reportsRouter };

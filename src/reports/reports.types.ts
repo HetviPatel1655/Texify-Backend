@@ -194,3 +194,68 @@ export interface YarnSaleChallanReportRow {
   rate: number;
   amount: number;
 }
+
+// ─── 9. Sale Outstanding Report ──────────────────────────────────────────────
+
+export interface SaleOutstandingReportQuery extends ReportDateRangeQuery {
+  paidAsOn?: string;
+  criteria?: "outstanding" | "due" | "all";
+  dueAsOn?: string;
+  reportFormat?: "partyWise" | "dateWise" | "agentPartyWise";
+  partyIds?: string;
+  agentName?: string;
+  billDaysFrom?: string;
+  billDaysTo?: string;
+  interestRate?: string;
+  interestBasis?: "30day" | "365day";
+  dueDaysCountFrom?: "partyWise" | "billWise";
+  dueDays?: string;
+  dueCountDate?: string;
+}
+
+export interface SaleOutstandingReportRow {
+  invoiceId: string;
+  invoiceNumber: string;
+  issueDate: string;
+  dueDate: string | null;
+  partyId: string;
+  partyName: string;
+  agentName: string | null;
+  grandTotal: number;
+  paidAmount: number;
+  balanceAmount: number;
+  daysPastDue: number;
+  interestAmount: number;
+  totalWithInterest: number;
+}
+
+// ─── 10. Purchase Outstanding Report ─────────────────────────────────────────
+
+export interface PurchaseOutstandingReportQuery extends ReportDateRangeQuery {
+  paidAsOn?: string;
+  criteria?: "outstanding" | "due" | "all";
+  dueAsOn?: string;
+  reportFormat?: "partyWise" | "dateWise";
+  partyIds?: string;
+  billDaysFrom?: string;
+  billDaysTo?: string;
+  interestRate?: string;
+  interestBasis?: "30day" | "365day";
+  reportType?: "purchase" | "general" | "both";
+}
+
+export interface PurchaseOutstandingReportRow {
+  purchaseId: string;
+  serialNumber: string;
+  billNo: string | null;
+  billDate: string | null;
+  purchaseDate: string;
+  partyId: string;
+  partyName: string;
+  billAmount: number;
+  adjustedAmount: number;
+  balanceAmount: number;
+  daysPastDue: number;
+  interestAmount: number;
+  totalWithInterest: number;
+}

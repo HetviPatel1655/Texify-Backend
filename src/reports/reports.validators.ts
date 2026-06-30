@@ -99,3 +99,34 @@ export const yarnSaleChallanReportSchema = z.object({
   sortOn: z.enum(["itemWise", "partyWise", "dateWise"]).optional(),
   reportType: z.enum(["detailed", "summary"]).optional(),
 });
+
+export const saleOutstandingReportSchema = z.object({
+  ...dateRangeFields,
+  paidAsOn: optionalString,
+  criteria: z.enum(["outstanding", "due", "all"]).optional(),
+  dueAsOn: optionalString,
+  reportFormat: z.enum(["partyWise", "dateWise", "agentPartyWise"]).optional(),
+  partyIds: optionalString,
+  agentName: optionalString,
+  billDaysFrom: optionalString,
+  billDaysTo: optionalString,
+  interestRate: optionalString,
+  interestBasis: z.enum(["30day", "365day"]).optional(),
+  dueDaysCountFrom: z.enum(["partyWise", "billWise"]).optional(),
+  dueDays: optionalString,
+  dueCountDate: optionalString,
+});
+
+export const purchaseOutstandingReportSchema = z.object({
+  ...dateRangeFields,
+  paidAsOn: optionalString,
+  criteria: z.enum(["outstanding", "due", "all"]).optional(),
+  dueAsOn: optionalString,
+  reportFormat: z.enum(["partyWise", "dateWise"]).optional(),
+  partyIds: optionalString,
+  billDaysFrom: optionalString,
+  billDaysTo: optionalString,
+  interestRate: optionalString,
+  interestBasis: z.enum(["30day", "365day"]).optional(),
+  reportType: z.enum(["purchase", "general", "both"]).optional(),
+});

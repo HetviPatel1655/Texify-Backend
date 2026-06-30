@@ -17,6 +17,10 @@ import type {
   TakaReceivedReportRow,
   YarnSaleChallanReportQuery,
   YarnSaleChallanReportRow,
+  SaleOutstandingReportQuery,
+  SaleOutstandingReportRow,
+  PurchaseOutstandingReportQuery,
+  PurchaseOutstandingReportRow,
 } from "./reports.types";
 
 function parseDateRange(fromDate: string, toDate: string) {
@@ -592,6 +596,283 @@ export class ReportsRepository {
 
     if (sortOn === "itemWise") {
       rows.sort((a, b) => (a.itemName ?? "").localeCompare(b.itemName ?? ""));
+    }
+
+    return rows;
+  }
+
+  // ─── 9. Sale Outstanding Report ─────────────────────────────────────
+
+  async getSaleOutstandingReport(
+    tenantId: string,
+    query: SaleOutstandingReportQuery,
+  ): Promise<SaleOutstandingReportRow[]> {
+    const {
+      fromDate,
+      toDate,
+      paidAsOn,
+      criteria = "outstanding",
+      dueAsOn,
+      reportFormat = "partyWise",
+      partyIds,
+      agentName,
+      billDaysFrom,
+      billDaysTo,
+      interestRate,
+      interestBasis = "365day",
+      dueDaysCountFrom = "billWise",
+      dueDays,
+      dueCountDate,
+    } = query;
+
+    const where: any = {
+      tenantId,
+      deletedAt: null,
+      status: { notIn: ["CANCELLED", "DRAFT"] },
+      issueDate: parseDateRange(fromDate, toDate),
+    };
+
+    if (criteria === "outstanding") {
+      where.paymentStatus = { in: ["UNPAID", "PARTIAL"] };
+    } else if (criteria === "due") {
+      where.paymentStatus = { in: ["UNPAID", "PARTIAL"] };
+      if (dueAsOn) {
+        where.dueDate = { lte: new Date(`${dueAsOn}T23:59:59.999Z`) };
+      }
+    }
+
+    if (partyIds) {
+      const ids = partyIds.split(",").filter(Boolean);
+      if (ids.length > 0) where.partyId = { in: ids };
+    }
+
+    if (agentName) {
+      where.agentName = containsFilter(agentName);
+    }
+
+    const invoices = await prisma.invoice.findMany({
+      where,
+      orderBy:
+        reportFormat === "dateWise"
+          ? { issueDate: "asc" }
+          : { party: { name: "asc" } },
+      include: {
+        party: { select: { id: true, name: true, dueDays: true } },
+        payments: {
+          where: {
+            deletedAt: null,
+            ...(paidAsOn
+              ? { paymentDate: { lte: new Date(`${paidAsOn}T23:59:59.999Z`) } }
+              : {}),
+          },
+          select: { amount: true },
+        },
+        bankEntryAdjustments: {
+          include: {
+            bankEntry: { select: { entryDate: true, deletedAt: true } },
+          },
+        },
+      },
+    });
+
+    const refDate = paidAsOn ? new Date(paidAsOn) : new Date();
+    const rate = interestRate ? parseFloat(interestRate) : 0;
+    const divisor = interestBasis === "30day" ? 30 : 365;
+
+    const rows: SaleOutstandingReportRow[] = [];
+
+    for (const inv of invoices) {
+      const paidViaPayments = inv.payments.reduce(
+        (sum: number, p: { amount: any }) => sum + formatDecimalValue(p.amount),
+        0,
+      );
+      const paidViaAdj = inv.bankEntryAdjustments
+        .filter((a: { bankEntry: { deletedAt: any } }) => !a.bankEntry.deletedAt)
+        .filter((a: { bankEntry: { entryDate: Date } }) =>
+          paidAsOn
+            ? a.bankEntry.entryDate <= new Date(`${paidAsOn}T23:59:59.999Z`)
+            : true,
+        )
+        .reduce(
+          (sum: number, a: { amount: any }) => sum + formatDecimalValue(a.amount),
+          0,
+        );
+
+      const totalPaid = paidViaPayments + paidViaAdj;
+      const grand = formatDecimalValue(inv.grandTotal);
+      const balance = Math.max(0, grand - totalPaid);
+
+      if (criteria !== "all" && balance <= 0) continue;
+
+      let dueDate: Date | null = inv.dueDate;
+      if (!dueDate && dueDaysCountFrom === "partyWise" && inv.party.dueDays) {
+        dueDate = new Date(inv.issueDate);
+        dueDate.setDate(dueDate.getDate() + inv.party.dueDays);
+      } else if (!dueDate && dueDaysCountFrom === "billWise" && dueDays) {
+        dueDate = new Date(inv.issueDate);
+        dueDate.setDate(dueDate.getDate() + parseInt(dueDays));
+      } else if (
+        !dueDate &&
+        dueDaysCountFrom === "billWise" &&
+        dueCountDate
+      ) {
+        dueDate = new Date(dueCountDate);
+      }
+
+      const daysPastDue =
+        dueDate && refDate > dueDate
+          ? Math.floor(
+              (refDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24),
+            )
+          : 0;
+
+      if (billDaysFrom || billDaysTo) {
+        const issueDay = Math.floor(
+          (refDate.getTime() - inv.issueDate.getTime()) / (1000 * 60 * 60 * 24),
+        );
+        if (billDaysFrom && issueDay < parseInt(billDaysFrom)) continue;
+        if (billDaysTo && issueDay > parseInt(billDaysTo)) continue;
+      }
+
+      const interestAmount =
+        rate > 0 && daysPastDue > 0
+          ? (balance * rate * daysPastDue) / (divisor * 100)
+          : 0;
+
+      rows.push({
+        invoiceId: inv.id,
+        invoiceNumber: inv.invoiceNumber,
+        issueDate: inv.issueDate.toISOString(),
+        dueDate: dueDate?.toISOString() ?? null,
+        partyId: inv.party.id,
+        partyName: inv.party.name,
+        agentName: inv.agentName,
+        grandTotal: grand,
+        paidAmount: totalPaid,
+        balanceAmount: Math.round(balance * 100) / 100,
+        daysPastDue,
+        interestAmount: Math.round(interestAmount * 100) / 100,
+        totalWithInterest:
+          Math.round((balance + interestAmount) * 100) / 100,
+      });
+    }
+
+    if (reportFormat === "agentPartyWise") {
+      rows.sort((a, b) => {
+        const agentCmp = (a.agentName ?? "").localeCompare(
+          b.agentName ?? "",
+        );
+        return agentCmp !== 0
+          ? agentCmp
+          : a.partyName.localeCompare(b.partyName);
+      });
+    }
+
+    return rows;
+  }
+
+  // ─── 10. Purchase Outstanding Report ────────────────────────────────
+
+  async getPurchaseOutstandingReport(
+    tenantId: string,
+    query: PurchaseOutstandingReportQuery,
+  ): Promise<PurchaseOutstandingReportRow[]> {
+    const {
+      fromDate,
+      toDate,
+      paidAsOn,
+      criteria = "outstanding",
+      dueAsOn,
+      reportFormat = "partyWise",
+      partyIds,
+      billDaysFrom,
+      billDaysTo,
+      interestRate,
+      interestBasis = "365day",
+    } = query;
+
+    const where: any = {
+      tenantId,
+      deletedAt: null,
+      purchaseDate: parseDateRange(fromDate, toDate),
+    };
+
+    if (partyIds) {
+      const ids = partyIds.split(",").filter(Boolean);
+      if (ids.length > 0) where.partyId = { in: ids };
+    }
+
+    const purchases = await prisma.yarnPurchase.findMany({
+      where,
+      orderBy:
+        reportFormat === "dateWise"
+          ? { purchaseDate: "asc" }
+          : { party: { name: "asc" } },
+      include: {
+        party: { select: { id: true, name: true, dueDays: true } },
+      },
+    });
+
+    const refDate = paidAsOn ? new Date(paidAsOn) : new Date();
+    const rate = interestRate ? parseFloat(interestRate) : 0;
+    const divisor = interestBasis === "30day" ? 30 : 365;
+
+    const rows: PurchaseOutstandingReportRow[] = [];
+
+    for (const p of purchases) {
+      const billAmt = formatDecimalValue(p.billAmount);
+      const adjAmt = formatDecimalValue(p.adjustedAmount);
+      const balance = Math.max(0, billAmt - adjAmt);
+
+      if (criteria === "outstanding" && balance <= 0) continue;
+      if (criteria === "due") {
+        if (balance <= 0) continue;
+        const dueDays = p.party.dueDays ?? 0;
+        const dueDate = new Date(p.billDate ?? p.purchaseDate);
+        dueDate.setDate(dueDate.getDate() + dueDays);
+        if (dueAsOn && dueDate > new Date(`${dueAsOn}T23:59:59.999Z`))
+          continue;
+      }
+
+      const billDate = p.billDate ?? p.purchaseDate;
+      const daysSinceBill = Math.floor(
+        (refDate.getTime() - billDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      if (billDaysFrom && daysSinceBill < parseInt(billDaysFrom)) continue;
+      if (billDaysTo && daysSinceBill > parseInt(billDaysTo)) continue;
+
+      const dueDays = p.party.dueDays ?? 0;
+      const dueDate = new Date(billDate);
+      dueDate.setDate(dueDate.getDate() + dueDays);
+      const daysPastDue =
+        refDate > dueDate
+          ? Math.floor(
+              (refDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24),
+            )
+          : 0;
+
+      const interestAmount =
+        rate > 0 && daysPastDue > 0
+          ? (balance * rate * daysPastDue) / (divisor * 100)
+          : 0;
+
+      rows.push({
+        purchaseId: p.id,
+        serialNumber: p.serialNumber,
+        billNo: p.billNo,
+        billDate: (p.billDate ?? p.purchaseDate).toISOString(),
+        purchaseDate: p.purchaseDate.toISOString(),
+        partyId: p.party.id,
+        partyName: p.party.name,
+        billAmount: billAmt,
+        adjustedAmount: adjAmt,
+        balanceAmount: Math.round(balance * 100) / 100,
+        daysPastDue,
+        interestAmount: Math.round(interestAmount * 100) / 100,
+        totalWithInterest:
+          Math.round((balance + interestAmount) * 100) / 100,
+      });
     }
 
     return rows;

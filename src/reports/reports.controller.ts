@@ -11,6 +11,8 @@ import type {
   RollsIssueReportQuery,
   TakaReceivedReportQuery,
   YarnSaleChallanReportQuery,
+  SaleOutstandingReportQuery,
+  PurchaseOutstandingReportQuery,
 } from "./reports.types";
 
 const reportsRepo = new ReportsRepository();
@@ -84,5 +86,23 @@ export const getYarnSaleChallanReport = asyncHandler(
     const query = req.query as unknown as YarnSaleChallanReportQuery;
     const result = await reportsRepo.getYarnSaleChallanReport(tenantId, query);
     ApiResponse.ok(res, "Yarn sale challan report generated", result);
+  },
+);
+
+export const getSaleOutstandingReport = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { tenantId } = (req as any).user;
+    const query = req.query as unknown as SaleOutstandingReportQuery;
+    const result = await reportsRepo.getSaleOutstandingReport(tenantId, query);
+    ApiResponse.ok(res, "Sale outstanding report generated", result);
+  },
+);
+
+export const getPurchaseOutstandingReport = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { tenantId } = (req as any).user;
+    const query = req.query as unknown as PurchaseOutstandingReportQuery;
+    const result = await reportsRepo.getPurchaseOutstandingReport(tenantId, query);
+    ApiResponse.ok(res, "Purchase outstanding report generated", result);
   },
 );
