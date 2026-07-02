@@ -302,13 +302,16 @@ export class InvoicesRepository {
   }
 
   async nextSequence(seriesCode: string, fiscalYear: string, tenantId: string, client: any = prisma): Promise<number> {
-    const row = await client.invoice.findFirst({
-      where: { seriesCode, fiscalYear, tenantId },
-      orderBy: { sequenceNumber: "desc" },
+    const activeRows = await client.invoice.findMany({
+      where: { seriesCode, fiscalYear, tenantId, deletedAt: null },
+      orderBy: { sequenceNumber: "asc" },
       select: { sequenceNumber: true }
     });
 
-    return (row?.sequenceNumber ?? 0) + 1;
+    const usedNumbers = new Set(activeRows.map((r: { sequenceNumber: number }) => r.sequenceNumber));
+    let seq = 1;
+    while (usedNumbers.has(seq)) seq++;
+    return seq;
   }
 
   async numberExists(seriesCode: string, sequenceNumber: number, fiscalYear: string, tenantId: string, client: any = prisma): Promise<boolean> {

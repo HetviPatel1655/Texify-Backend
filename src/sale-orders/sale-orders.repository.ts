@@ -171,21 +171,22 @@ export class SaleOrdersRepository {
 
   async getNextOrderNumber(tenantId: string): Promise<string> {
     const fiscalYear = this.getCurrentFiscalYear();
-    const lastOrder = await prisma.saleOrder.findFirst({
+    const activeOrders = await prisma.saleOrder.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         orderNumber: { startsWith: `SO-${fiscalYear}` },
       },
-      orderBy: { orderNumber: "desc" },
       select: { orderNumber: true },
     });
 
+    const usedNumbers = new Set(activeOrders.map((o: { orderNumber: string }) => {
+      const parts = o.orderNumber.split("-");
+      return parseInt(parts[parts.length - 1], 10);
+    }));
+
     let nextSeq = 1;
-    if (lastOrder) {
-      const parts = lastOrder.orderNumber.split("-");
-      const lastSeq = parseInt(parts[parts.length - 1], 10);
-      if (!isNaN(lastSeq)) nextSeq = lastSeq + 1;
-    }
+    while (usedNumbers.has(nextSeq)) nextSeq++;
 
     return `SO-${fiscalYear}-${String(nextSeq).padStart(4, "0")}`;
   }
