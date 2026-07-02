@@ -131,7 +131,7 @@ export class BankEntriesService {
       updateData.unadjustedAmount = amount - currentAdjusted;
     }
 
-    const entry = await this.repository.update(id, updateData);
+    const entry = await this.repository.update(id, context.tenantId, updateData);
 
     if (dto.adjustments !== undefined) {
       const newInvoiceIds = dto.adjustments.map((a) => a.invoiceId);

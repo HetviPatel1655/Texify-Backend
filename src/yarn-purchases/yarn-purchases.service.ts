@@ -166,7 +166,7 @@ export class YarnPurchasesService {
       if (dto.billAmount !== undefined) updateData.billAmount = dto.billAmount;
     }
 
-    const purchase = await this.repository.update(id, updateData);
+    const purchase = await this.repository.update(id, context.tenantId, updateData);
     return { data: purchase };
   }
 

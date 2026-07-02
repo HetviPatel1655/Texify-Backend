@@ -108,7 +108,7 @@ export class PurchaseOrdersService {
       };
     }
 
-    const order = await this.repository.update(id, updateData);
+    const order = await this.repository.update(id, context.tenantId, updateData);
     return { data: order };
   }
 

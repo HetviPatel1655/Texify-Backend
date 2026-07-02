@@ -178,7 +178,9 @@ export class TakasRepository {
     return results;
   }
 
-  async update(id: string, data: Prisma.TakaUpdateInput): Promise<TakaDto> {
+  async update(id: string, tenantId: string, data: Prisma.TakaUpdateInput): Promise<TakaDto> {
+    const existing = await prisma.taka.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!existing) throw new Error('Taka not found');
     const row = await prisma.taka.update({ where: { id }, data, select: takaSelect });
     return toDto(row);
   }

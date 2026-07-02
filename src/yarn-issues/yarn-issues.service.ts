@@ -68,7 +68,7 @@ export class YarnIssuesService {
     if (dto.deptName !== undefined) updateData.deptName = dto.deptName;
     if (dto.remarks !== undefined) updateData.remarks = dto.remarks;
 
-    const issue = await this.repository.update(id, updateData);
+    const issue = await this.repository.update(id, context.tenantId, updateData);
     return { data: issue };
   }
 

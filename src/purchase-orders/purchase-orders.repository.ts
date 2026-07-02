@@ -154,7 +154,9 @@ export class PurchaseOrdersRepository {
     return toDto(row);
   }
 
-  async update(id: string, data: Prisma.PurchaseOrderUpdateInput): Promise<PurchaseOrderDto> {
+  async update(id: string, tenantId: string, data: Prisma.PurchaseOrderUpdateInput): Promise<PurchaseOrderDto> {
+    const existing = await prisma.purchaseOrder.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!existing) throw new Error('Purchase order not found');
     const row = await prisma.purchaseOrder.update({
       where: { id },
       data,

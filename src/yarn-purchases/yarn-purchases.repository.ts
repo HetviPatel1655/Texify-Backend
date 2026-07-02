@@ -170,7 +170,9 @@ export class YarnPurchasesRepository {
     return toDto(row);
   }
 
-  async update(id: string, data: Prisma.YarnPurchaseUpdateInput): Promise<YarnPurchaseDto> {
+  async update(id: string, tenantId: string, data: Prisma.YarnPurchaseUpdateInput): Promise<YarnPurchaseDto> {
+    const existing = await prisma.yarnPurchase.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!existing) throw new Error('Yarn purchase not found');
     const row = await prisma.yarnPurchase.update({
       where: { id },
       data,

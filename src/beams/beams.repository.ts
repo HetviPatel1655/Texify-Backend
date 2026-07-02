@@ -141,7 +141,9 @@ export class BeamsRepository {
     return toDto(row);
   }
 
-  async update(id: string, data: Prisma.BeamUpdateInput): Promise<BeamDto> {
+  async update(id: string, tenantId: string, data: Prisma.BeamUpdateInput): Promise<BeamDto> {
+    const existing = await prisma.beam.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!existing) throw new Error('Beam not found');
     const row = await prisma.beam.update({ where: { id }, data, select: beamSelect });
     return toDto(row);
   }

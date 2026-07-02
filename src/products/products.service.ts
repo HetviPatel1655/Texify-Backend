@@ -47,7 +47,7 @@ export class ProductsService implements BaseCrudService<ProductDto, CreateProduc
       throw new AppError("Product not found", 404);
     }
 
-    const product = await this.productsRepository.update(id, {
+    const product = await this.productsRepository.update(id, context.tenantId, {
       name: dto.name,
       description: dto.description ?? undefined,
       hsnCode: dto.hsnCode,

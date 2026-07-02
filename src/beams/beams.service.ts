@@ -103,7 +103,7 @@ export class BeamsService {
       updateData.party = dto.partyId ? { connect: { id: dto.partyId } } : { disconnect: true };
     }
 
-    const beam = await this.repository.update(id, updateData);
+    const beam = await this.repository.update(id, context.tenantId, updateData);
     return { data: beam };
   }
 

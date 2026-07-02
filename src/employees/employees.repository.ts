@@ -92,7 +92,9 @@ export class EmployeesRepository {
     return toDto(row);
   }
 
-  async update(id: string, data: Prisma.EmployeeUpdateInput): Promise<EmployeeDto> {
+  async update(id: string, tenantId: string, data: Prisma.EmployeeUpdateInput): Promise<EmployeeDto> {
+    const existing = await prisma.employee.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!existing) throw new Error('Employee not found');
     const row = await prisma.employee.update({
       where: { id },
       data,

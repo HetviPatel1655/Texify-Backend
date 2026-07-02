@@ -135,7 +135,7 @@ export class TakasService {
       updateData.firm = dto.firmId ? { connect: { id: dto.firmId } } : { disconnect: true };
     }
 
-    const taka = await this.repository.update(id, updateData);
+    const taka = await this.repository.update(id, context.tenantId, updateData);
     return { data: taka };
   }
 

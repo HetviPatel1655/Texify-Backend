@@ -149,7 +149,9 @@ export class SaleOrdersRepository {
     return toDto(row);
   }
 
-  async update(id: string, data: Prisma.SaleOrderUpdateInput): Promise<SaleOrderDto> {
+  async update(id: string, tenantId: string, data: Prisma.SaleOrderUpdateInput): Promise<SaleOrderDto> {
+    const existing = await prisma.saleOrder.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!existing) throw new Error('Sale order not found');
     const row = await prisma.saleOrder.update({
       where: { id },
       data,

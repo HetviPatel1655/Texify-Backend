@@ -132,7 +132,9 @@ export class PartiesRepository {
     return toPartyDto(row);
   }
 
-  async update(id: string, data: Prisma.PartyUpdateInput): Promise<PartyDto> {
+  async update(id: string, tenantId: string, data: Prisma.PartyUpdateInput): Promise<PartyDto> {
+    const existing = await prisma.party.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!existing) throw new Error('Party not found');
     const row = await prisma.party.update({
       where: { id },
       data,

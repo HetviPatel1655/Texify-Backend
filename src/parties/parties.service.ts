@@ -73,7 +73,7 @@ export class PartiesService implements BaseCrudService<PartyDto, CreatePartyDto,
       throw new AppError("Party not found", 404);
     }
 
-    const party = await this.partiesRepository.update(id, {
+    const party = await this.partiesRepository.update(id, context.tenantId, {
       name: dto.name,
       partyType: dto.partyType,
       email: dto.email ?? undefined,

@@ -105,7 +105,9 @@ export class YarnIssuesRepository {
     return toDto(row);
   }
 
-  async update(id: string, data: Prisma.YarnIssueUpdateInput): Promise<YarnIssueDto> {
+  async update(id: string, tenantId: string, data: Prisma.YarnIssueUpdateInput): Promise<YarnIssueDto> {
+    const existing = await prisma.yarnIssue.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!existing) throw new Error('Yarn issue not found');
     const row = await prisma.yarnIssue.update({ where: { id }, data, select: yarnIssueSelect });
     return toDto(row);
   }

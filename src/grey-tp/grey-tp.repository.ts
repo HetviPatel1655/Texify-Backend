@@ -105,7 +105,9 @@ export class GreyTPRepository {
     return toDto(row);
   }
 
-  async update(id: string, data: Prisma.GreyTPUpdateInput): Promise<GreyTPDto> {
+  async update(id: string, tenantId: string, data: Prisma.GreyTPUpdateInput): Promise<GreyTPDto> {
+    const existing = await prisma.greyTP.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!existing) throw new Error('Grey TP not found');
     const row = await prisma.greyTP.update({ where: { id }, data, select: greyTPSelect });
     return toDto(row);
   }

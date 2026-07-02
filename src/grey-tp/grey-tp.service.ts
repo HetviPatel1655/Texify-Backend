@@ -63,7 +63,7 @@ export class GreyTPService {
     if (dto.newSarees !== undefined) updateData.newSarees = dto.newSarees;
     if (dto.remark !== undefined) updateData.remark = dto.remark;
 
-    const greyTP = await this.repository.update(id, updateData);
+    const greyTP = await this.repository.update(id, context.tenantId, updateData);
 
     await prisma.taka.update({
       where: { id: existing.takaId },

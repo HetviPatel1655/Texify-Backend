@@ -41,7 +41,7 @@ export class EmployeesService {
     if (dto.dailyRate !== undefined) updateData.dailyRate = dto.dailyRate;
     if (dto.isActive !== undefined) updateData.isActive = dto.isActive;
 
-    const employee = await this.repository.update(id, updateData);
+    const employee = await this.repository.update(id, context.tenantId, updateData);
     return { data: employee };
   }
 

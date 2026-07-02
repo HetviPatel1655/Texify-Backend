@@ -109,7 +109,9 @@ export class ReturnTakasRepository {
     return toDto(row);
   }
 
-  async update(id: string, data: Prisma.ReturnTakaUpdateInput): Promise<ReturnTakaDto> {
+  async update(id: string, tenantId: string, data: Prisma.ReturnTakaUpdateInput): Promise<ReturnTakaDto> {
+    const existing = await prisma.returnTaka.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!existing) throw new Error('Return taka not found');
     const row = await prisma.returnTaka.update({ where: { id }, data, select: returnTakaSelect });
     return toDto(row);
   }

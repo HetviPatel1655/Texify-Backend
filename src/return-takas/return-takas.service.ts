@@ -59,7 +59,7 @@ export class ReturnTakasService {
       updateData.party = dto.partyId ? { connect: { id: dto.partyId } } : { disconnect: true };
     }
 
-    const returnTaka = await this.repository.update(id, updateData);
+    const returnTaka = await this.repository.update(id, context.tenantId, updateData);
     return { data: returnTaka };
   }
 

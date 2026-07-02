@@ -109,7 +109,9 @@ export class ProductsRepository {
     return toProductDto(row);
   }
 
-  async update(id: string, data: Prisma.ProductUpdateInput): Promise<ProductDto> {
+  async update(id: string, tenantId: string, data: Prisma.ProductUpdateInput): Promise<ProductDto> {
+    const existing = await prisma.product.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!existing) throw new Error('Product not found');
     const row = await prisma.product.update({
       where: { id },
       data,

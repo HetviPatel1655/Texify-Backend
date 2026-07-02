@@ -144,7 +144,9 @@ export class BankEntriesRepository {
     return toDto(row);
   }
 
-  async update(id: string, data: Prisma.BankEntryUpdateInput): Promise<BankEntryDto> {
+  async update(id: string, tenantId: string, data: Prisma.BankEntryUpdateInput): Promise<BankEntryDto> {
+    const existing = await prisma.bankEntry.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!existing) throw new Error('Bank entry not found');
     const row = await prisma.bankEntry.update({
       where: { id },
       data,
