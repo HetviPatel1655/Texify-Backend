@@ -8,23 +8,37 @@ import { AppError } from "../common/errors/appError";
 import { EmailService } from "../common/services/email.service";
 
 export const AuthService = {
-  async getProfile(userId: string) {
+  async getProfile(userId: string, activeTenantId?: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, name: true, email: true, role: true, createdAt: true },
     });
     if (!user) throw new AppError("User not found", 404);
 
-    const tenantUser = await prisma.tenantUser.findFirst({
+    const tenantUsers = await prisma.tenantUser.findMany({
       where: { userId },
-      select: { tenantId: true, role: true, tenant: { select: { name: true } } },
+      select: {
+        tenantId: true,
+        role: true,
+        tenant: { select: { name: true, companyProfile: { select: { companyName: true } } } },
+      },
+      orderBy: { createdAt: "asc" },
     });
+
+    const activeTU = activeTenantId
+      ? tenantUsers.find((tu) => tu.tenantId === activeTenantId)
+      : tenantUsers[0];
 
     return {
       ...user,
-      tenantId: tenantUser?.tenantId ?? null,
-      tenantRole: tenantUser?.role ?? null,
-      companyName: tenantUser?.tenant?.name ?? null,
+      tenantId: activeTU?.tenantId ?? null,
+      tenantRole: activeTU?.role ?? null,
+      companyName: activeTU?.tenant?.companyProfile?.companyName ?? activeTU?.tenant?.name ?? null,
+      tenants: tenantUsers.map((tu) => ({
+        id: tu.tenantId,
+        name: tu.tenant.companyProfile?.companyName ?? tu.tenant.name,
+        role: tu.role,
+      })),
     };
   },
 

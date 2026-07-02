@@ -9,12 +9,14 @@ import { erpRouter } from "./erp.routes";
 import { pdfRouter } from "../../pdf/pdf.routes";
 import { subscriptionsRouter, subscriptionsWebhookRouter } from "../../subscriptions/subscriptions.routes";
 import { featureGateRouter } from "../../feature-gate/feature-gate.routes";
+import { tenantsRouter } from "../../tenants/tenants.routes";
 
 const v1Router = Router();
 
 v1Router.use(healthRouter);
 v1Router.use("/auth", authRouter);
 v1Router.use("/users", usersRouter);
+v1Router.use("/tenants", tenantsRouter);
 v1Router.use("/company-profile", companyProfileRouter);
 v1Router.use("/gstin-lookup", gstinLookupRouter);
 v1Router.use("/erp", erpRouter);

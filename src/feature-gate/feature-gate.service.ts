@@ -61,7 +61,46 @@ function currentMonthRange(): { start: Date; end: Date } {
   return { start, end };
 }
 
+const FREE_MAX_COMPANIES = 1;
+const PRO_MAX_COMPANIES = 3;
+
+async function userHasProSubscription(userId: string): Promise<boolean> {
+  const tenantUsers = await prisma.tenantUser.findMany({
+    where: { userId },
+    select: { tenantId: true },
+  });
+  if (tenantUsers.length === 0) return false;
+
+  const tenantIds = tenantUsers.map((tu) => tu.tenantId);
+  const activeSub = await prisma.subscription.findFirst({
+    where: {
+      tenantId: { in: tenantIds },
+      planName: "pro",
+      status: { in: ["ACTIVE", "AUTHENTICATED"] },
+    },
+  });
+  return !!activeSub;
+}
+
 export const FeatureGateService = {
+  async checkCompanyLimit(userId: string): Promise<void> {
+    const count = await prisma.tenantUser.count({ where: { userId } });
+    const isPro = await userHasProSubscription(userId);
+    const limit = isPro ? PRO_MAX_COMPANIES : FREE_MAX_COMPANIES;
+
+    if (count >= limit) {
+      throw new AppError(
+        isPro
+          ? `Pro plan allows up to ${PRO_MAX_COMPANIES} companies.`
+          : `Free plan allows only ${FREE_MAX_COMPANIES} company. Upgrade to Pro for up to ${PRO_MAX_COMPANIES}.`,
+        403,
+        true,
+        "LIMIT_EXCEEDED",
+        { feature: "companies:create", limit, current: count },
+      );
+    }
+  },
+
   async checkFeature(tenantId: string, feature: Feature): Promise<void> {
     const planName = await getActivePlan(tenantId);
     const limits = getLimits(planName);
