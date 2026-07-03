@@ -18,6 +18,6 @@ export const createTenant = asyncHandler(async (req: Request, res: Response) => 
 
 export const switchTenant = asyncHandler(async (req: Request, res: Response) => {
   const user = (req as any).user;
-  const tokens = await TenantsService.switchTenant(user.id, req.params.tenantId, user.role);
+  const tokens = await TenantsService.switchTenant(user.id, req.params.tenantId as string, user.role);
   return ApiResponse.ok(res, "Switched company", tokens);
 });
