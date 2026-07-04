@@ -4,10 +4,12 @@ import { renewApiKey } from "./gstin-key-renewer";
 
 const MAX_CALLS = 20;
 const MAX_DAYS = 30;
+const RENEWAL_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
 const DB_KEY_API = "gstin_api_key";
 const DB_KEY_CALLS = "gstin_call_count";
 const DB_KEY_CREATED = "gstin_key_created_at";
+const DB_KEY_LAST_RENEWAL_ATTEMPT = "gstin_last_renewal_attempt";
 
 async function dbGet(tenantId: string, key: string): Promise<string | null> {
   try {
@@ -64,7 +66,14 @@ export async function getValidApiKey(tenantId: string): Promise<string | null> {
     return tracker.apiKey;
   }
 
+  const canAttemptRenewal = await isRenewalCooldownExpired(tenantId);
+  if (!canAttemptRenewal) {
+    console.log("[gstin-key-manager] Renewal on cooldown, skipping");
+    return tracker?.apiKey ?? null;
+  }
+
   try {
+    await dbSet(tenantId, DB_KEY_LAST_RENEWAL_ATTEMPT, new Date().toISOString());
     const newKey = await renewApiKey();
     const now = new Date().toISOString();
     await saveTrackerToDb(tenantId, newKey, 0, now);
@@ -76,7 +85,14 @@ export async function getValidApiKey(tenantId: string): Promise<string | null> {
 }
 
 export async function forceRenewKey(tenantId: string): Promise<string | null> {
+  const canAttempt = await isRenewalCooldownExpired(tenantId);
+  if (!canAttempt) {
+    console.log("[gstin-key-manager] Force renewal on cooldown, skipping");
+    return null;
+  }
+
   try {
+    await dbSet(tenantId, DB_KEY_LAST_RENEWAL_ATTEMPT, new Date().toISOString());
     const newKey = await renewApiKey();
     const now = new Date().toISOString();
     await saveTrackerToDb(tenantId, newKey, 0, now);
@@ -85,6 +101,12 @@ export async function forceRenewKey(tenantId: string): Promise<string | null> {
     console.error("[gstin-key-manager] Force renewal failed:", err);
     return null;
   }
+}
+
+async function isRenewalCooldownExpired(tenantId: string): Promise<boolean> {
+  const lastAttempt = await dbGet(tenantId, DB_KEY_LAST_RENEWAL_ATTEMPT);
+  if (!lastAttempt) return true;
+  return Date.now() - new Date(lastAttempt).getTime() > RENEWAL_COOLDOWN_MS;
 }
 
 export async function incrementCallCount(tenantId: string): Promise<void> {

@@ -37,18 +37,30 @@ async function registerOnGstinCheck(email: string): Promise<string> {
   const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
   const text = await res.text();
 
-  let parsed: { message?: string };
+  let parsed: { message?: string | { message?: string } };
   try {
     parsed = JSON.parse(text);
   } catch {
     throw new Error(`Unexpected response from gstincheck: ${text.substring(0, 200)}`);
   }
 
-  if (parsed.message === "Account already exists") {
+  const msg = typeof parsed.message === "object" && parsed.message !== null
+    ? parsed.message.message ?? JSON.stringify(parsed.message)
+    : String(parsed.message ?? "");
+
+  if (msg.includes("Account already exists")) {
     throw new Error("Account already exists for this email");
   }
 
-  return parsed.message ?? "OK";
+  if (msg.includes("Too many accounts") || msg.includes("Invalid Registration")) {
+    throw new Error(msg);
+  }
+
+  if (!msg || msg === "undefined") {
+    throw new Error(`Registration returned unexpected response: ${text.substring(0, 200)}`);
+  }
+
+  return msg;
 }
 
 interface MailMessage {
