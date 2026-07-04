@@ -1,35 +1,28 @@
-const MAIL_TM_API = "https://api.mail.tm";
+const GUERRILLA_API = "https://api.guerrillamail.com/ajax.php";
 
-async function createTempEmail(): Promise<{ address: string; token: string }> {
-  const domainsRes = await fetch(`${MAIL_TM_API}/domains`);
-  const domainsData = (await domainsRes.json()) as { "hydra:member": { domain: string }[] };
-  const domain = domainsData["hydra:member"][0].domain;
-
-  const address = `texify${Date.now()}@${domain}`;
-  const password = "TexifyAutoKey1!";
-
-  const createRes = await fetch(`${MAIL_TM_API}/accounts`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ address, password }),
+async function createTempEmail(): Promise<{ address: string; sidToken: string }> {
+  const res = await fetch(`${GUERRILLA_API}?f=get_email_address&lang=en`, {
+    signal: AbortSignal.timeout(15_000),
   });
 
-  if (!createRes.ok) {
-    throw new Error(`Failed to create temp email: ${createRes.status}`);
+  if (!res.ok) {
+    throw new Error(`Failed to create temp email: ${res.status}`);
   }
 
-  const tokenRes = await fetch(`${MAIL_TM_API}/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ address, password }),
-  });
+  const data = (await res.json()) as { email_addr: string; sid_token: string };
+  const emailUser = `texify${Date.now()}`;
 
-  if (!tokenRes.ok) {
-    throw new Error(`Failed to get email token: ${tokenRes.status}`);
+  const setRes = await fetch(
+    `${GUERRILLA_API}?f=set_email_user&email_user=${emailUser}&lang=en&sid_token=${data.sid_token}`,
+    { signal: AbortSignal.timeout(15_000) },
+  );
+
+  if (!setRes.ok) {
+    throw new Error(`Failed to set email user: ${setRes.status}`);
   }
 
-  const tokenData = (await tokenRes.json()) as { token: string };
-  return { address, token: tokenData.token };
+  const setData = (await setRes.json()) as { email_addr: string; sid_token: string };
+  return { address: setData.email_addr, sidToken: setData.sid_token };
 }
 
 async function registerOnGstinCheck(email: string): Promise<string> {
@@ -63,37 +56,28 @@ async function registerOnGstinCheck(email: string): Promise<string> {
   return msg;
 }
 
-interface MailMessage {
-  id: string;
-  from: { address: string };
-  subject: string;
+interface GuerrillaEmail {
+  mail_id: number;
+  mail_from: string;
+  mail_subject: string;
+  mail_body: string;
 }
 
-interface MailMessageFull {
-  text?: string;
-  html?: string;
-}
-
-async function pollForApiKeyEmail(token: string, maxAttempts = 30, intervalMs = 5000): Promise<string> {
+async function pollForApiKeyEmail(sidToken: string, maxAttempts = 30, intervalMs = 5000): Promise<string> {
   for (let i = 0; i < maxAttempts; i++) {
-    const res = await fetch(`${MAIL_TM_API}/messages`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetch(
+      `${GUERRILLA_API}?f=check_email&seq=0&sid_token=${sidToken}`,
+      { signal: AbortSignal.timeout(15_000) },
+    );
 
     if (res.ok) {
-      const data = (await res.json()) as { "hydra:member": MailMessage[] };
-      const messages = data["hydra:member"] || [];
+      const data = (await res.json()) as { list: GuerrillaEmail[] };
+      const emails = (data.list || []).filter((m) => m.mail_from !== "no-reply@guerrillamail.com");
 
-      if (messages.length > 0) {
-        const msgRes = await fetch(`${MAIL_TM_API}/messages/${messages[0].id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const msg = (await msgRes.json()) as MailMessageFull;
-        const body = msg.text || msg.html || "";
-
+      if (emails.length > 0) {
+        const body = emails[0].mail_body || "";
         const apiKey = extractApiKey(body);
         if (apiKey) return apiKey;
-
         throw new Error("Email received but could not extract API key from body");
       }
     }
@@ -121,7 +105,7 @@ function extractApiKey(body: string): string | null {
 
 export async function renewApiKey(): Promise<string> {
   console.log("[gstin-key-renewer] Creating temp email...");
-  const { address, token } = await createTempEmail();
+  const { address, sidToken } = await createTempEmail();
   console.log(`[gstin-key-renewer] Temp email: ${address}`);
 
   console.log("[gstin-key-renewer] Registering on gstincheck.co.in...");
@@ -129,7 +113,7 @@ export async function renewApiKey(): Promise<string> {
   console.log(`[gstin-key-renewer] Registration response: ${msg}`);
 
   console.log("[gstin-key-renewer] Polling for API key email...");
-  const apiKey = await pollForApiKeyEmail(token);
+  const apiKey = await pollForApiKeyEmail(sidToken);
   console.log("[gstin-key-renewer] New API key obtained");
 
   return apiKey;
