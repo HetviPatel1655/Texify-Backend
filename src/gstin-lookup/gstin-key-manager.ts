@@ -4,7 +4,7 @@ import { renewApiKey } from "./gstin-key-renewer";
 
 const MAX_CALLS = 20;
 const MAX_DAYS = 30;
-const RENEWAL_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+const RENEWAL_COOLDOWN_MS = 60 * 60 * 1000;
 
 const DB_KEY_API = "gstin_api_key";
 const DB_KEY_CALLS = "gstin_call_count";
