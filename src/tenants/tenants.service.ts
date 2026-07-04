@@ -73,6 +73,23 @@ export const TenantsService = {
     return { id: result.id, name: result.name, companyName, role: "OWNER", createdAt: result.createdAt };
   },
 
+  async deleteTenant(userId: string, tenantId: string) {
+    const tenantUser = await prisma.tenantUser.findUnique({
+      where: { tenantId_userId: { tenantId, userId } },
+    });
+
+    if (!tenantUser || tenantUser.role !== "OWNER") {
+      throw new AppError("Only the owner can delete a company", 403);
+    }
+
+    const tenantCount = await prisma.tenantUser.count({ where: { userId } });
+    if (tenantCount <= 1) {
+      throw new AppError("Cannot delete your only company", 400);
+    }
+
+    await prisma.tenant.delete({ where: { id: tenantId } });
+  },
+
   async switchTenant(userId: string, tenantId: string, userRole: string) {
     const tenantUser = await prisma.tenantUser.findUnique({
       where: { tenantId_userId: { tenantId, userId } },

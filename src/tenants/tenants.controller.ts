@@ -21,3 +21,9 @@ export const switchTenant = asyncHandler(async (req: Request, res: Response) => 
   const tokens = await TenantsService.switchTenant(user.id, req.params.tenantId as string, user.role);
   return ApiResponse.ok(res, "Switched company", tokens);
 });
+
+export const deleteTenant = asyncHandler(async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  await TenantsService.deleteTenant(user.id, req.params.tenantId as string);
+  return ApiResponse.ok(res, "Company deleted");
+});
