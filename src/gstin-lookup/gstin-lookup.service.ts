@@ -1,7 +1,11 @@
 import { AppError } from "../common/errors/appError";
-import { getValidApiKey, incrementCallCount } from "./gstin-key-manager";
+import { getValidApiKey, incrementCallCount, forceRenewKey } from "./gstin-key-manager";
 import { FeatureGateService } from "../feature-gate/feature-gate.service";
 import type { GstinLookupResult } from "./gstin-lookup.types";
+
+class CreditExpiredError extends Error {
+  constructor() { super("Credit expired"); }
+}
 
 const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$/;
 
@@ -105,8 +109,12 @@ async function fetchFromGstinCheck(gstin: string, apiKey: string): Promise<Gstin
   }
 
   if (!json.flag || !json.data) {
+    const msg = json.message ?? "";
+    if (msg.toLowerCase().includes("credit expire") || msg.toLowerCase().includes("credit limit")) {
+      throw new CreditExpiredError();
+    }
     throw new AppError(
-      json.message ?? "GSTIN not found or invalid. Please verify the number.",
+      msg || "GSTIN not found or invalid. Please verify the number.",
       404,
     );
   }
@@ -153,8 +161,23 @@ export async function lookupGstin(gstin: string, tenantId: string): Promise<Gsti
     return localExtract(normalized);
   }
 
-  const result = await fetchFromGstinCheck(normalized, apiKey);
-  await incrementCallCount(tenantId);
-  await FeatureGateService.incrementGstinLookups(tenantId);
-  return result;
+  try {
+    const result = await fetchFromGstinCheck(normalized, apiKey);
+    await incrementCallCount(tenantId);
+    await FeatureGateService.incrementGstinLookups(tenantId);
+    return result;
+  } catch (err) {
+    if (err instanceof CreditExpiredError) {
+      console.log("[gstin-lookup] Credits expired, forcing key renewal...");
+      const newKey = await forceRenewKey(tenantId);
+      if (!newKey) {
+        return localExtract(normalized);
+      }
+      const result = await fetchFromGstinCheck(normalized, newKey);
+      await incrementCallCount(tenantId);
+      await FeatureGateService.incrementGstinLookups(tenantId);
+      return result;
+    }
+    throw err;
+  }
 }

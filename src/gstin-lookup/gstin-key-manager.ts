@@ -75,6 +75,18 @@ export async function getValidApiKey(tenantId: string): Promise<string | null> {
   }
 }
 
+export async function forceRenewKey(tenantId: string): Promise<string | null> {
+  try {
+    const newKey = await renewApiKey();
+    const now = new Date().toISOString();
+    await saveTrackerToDb(tenantId, newKey, 0, now);
+    return newKey;
+  } catch (err) {
+    console.error("[gstin-key-manager] Force renewal failed:", err);
+    return null;
+  }
+}
+
 export async function incrementCallCount(tenantId: string): Promise<void> {
   const tracker = await getTrackerFromDb(tenantId);
   if (tracker) {
