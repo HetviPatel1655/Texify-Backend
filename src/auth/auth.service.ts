@@ -95,6 +95,7 @@ export const AuthService = {
 
     const tenantUser = await prisma.tenantUser.findFirst({
       where: { userId: user.id },
+      orderBy: { createdAt: "asc" },
       select: { tenantId: true }
     });
 
@@ -120,9 +121,9 @@ export const AuthService = {
   async refresh(incomingRefreshToken: string) {
     const secret = env.JWT_SECRET as unknown as jwt.Secret;
 
-    let payload: JwtPayload;
+    let payload: JwtPayload & { tenantId?: string };
     try {
-      payload = jwt.verify(incomingRefreshToken, secret) as JwtPayload;
+      payload = jwt.verify(incomingRefreshToken, secret) as JwtPayload & { tenantId?: string };
     } catch {
       throw new AppError("Invalid or expired refresh token", 401);
     }
@@ -132,21 +133,31 @@ export const AuthService = {
       throw new AppError("User not found", 401);
     }
 
-    const tenantUser = await prisma.tenantUser.findFirst({
-      where: { userId: user.id },
-      select: { tenantId: true }
-    });
+    const targetTenantId = payload.tenantId;
 
-    if (!tenantUser) throw new AppError("No organization associated with this account", 403);
+    if (targetTenantId) {
+      const tenantUser = await prisma.tenantUser.findUnique({
+        where: { tenantId_userId: { tenantId: targetTenantId, userId: user.id } },
+      });
+      if (!tenantUser) throw new AppError("No organization associated with this account", 403);
+    } else {
+      const tenantUser = await prisma.tenantUser.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: "asc" },
+        select: { tenantId: true },
+      });
+      if (!tenantUser) throw new AppError("No organization associated with this account", 403);
+      (payload as any).tenantId = tenantUser.tenantId;
+    }
 
     const j: any = jwt as any;
     const accessToken = j.sign(
-      { sub: user.id, role: user.role, tenantId: tenantUser.tenantId },
+      { sub: user.id, role: user.role, tenantId: payload.tenantId },
       secret,
       { expiresIn: env.ACCESS_TOKEN_EXPIRES_IN ?? "15m" }
     );
     const newRefreshToken = j.sign(
-      { sub: user.id, role: user.role, tenantId: tenantUser.tenantId },
+      { sub: user.id, role: user.role, tenantId: payload.tenantId },
       secret,
       { expiresIn: env.REFRESH_TOKEN_EXPIRES_IN ?? "7d" }
     );

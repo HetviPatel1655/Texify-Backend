@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 
 import { env } from "../config";
 import { AppError } from "../common/errors/appError";
+import { tenantContext } from "../lib/tenant-context";
 
 export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
@@ -23,8 +24,12 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 
     (req as any).user = { id: payload.sub, role: payload.role, tenantId: payload.tenantId };
 
-    next();
+    tenantContext.run({ tenantId: payload.tenantId }, () => next());
   } catch (err) {
-    next(new AppError("Unauthorized", 401));
+    if (err instanceof AppError) {
+      next(err);
+    } else {
+      next(new AppError("Unauthorized", 401));
+    }
   }
 }
