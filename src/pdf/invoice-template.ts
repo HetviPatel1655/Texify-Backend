@@ -231,7 +231,7 @@ export function buildInvoiceHtml(data: InvoicePdfData): string {
 
 <!-- GST / MSME / STATE -->
 <tr><td colspan="7" style="border-bottom:${bd};padding:${pad};font-size:${font};position:relative">
-  <b>GST No :</b>&ensp;${esc(co?.gstin)}
+  <b>GST No :</b>&ensp;${esc(co?.gstin?.toUpperCase())}
   <span style="position:absolute;left:42%;transform:translateX(-50%)"><b>MSME:</b>&ensp;${esc(co?.msme)}</span>
   <span style="float:right"><b>State :</b>&ensp;${co ? `${esc(co.stateCode)}-${esc(co.state)}` : ""}</span>
 </td></tr>
@@ -273,7 +273,7 @@ export function buildInvoiceHtml(data: InvoicePdfData): string {
       <span><b>State Code :</b>&ensp;${esc(p?.billingStateCode)}</span>
     </div>
     <div style="display:flex">
-      <span style="width:55%"><b>GST No :</b>&ensp;${esc(p?.gstin)}</span>
+      <span style="width:55%"><b>GST No :</b>&ensp;${esc(p?.gstin?.toUpperCase())}</span>
       <span><b>PAN No :</b>&ensp;${esc(p?.panNo)}</span>
     </div>
   </div>
@@ -289,7 +289,7 @@ export function buildInvoiceHtml(data: InvoicePdfData): string {
       <span style="width:55%"><b>State Name :</b>&ensp;${esc(p?.shippingState)}</span>
       <span><b>State Code :</b>&ensp;${esc(p?.shippingStateCode)}</span>
     </div>
-    <div><b>GST No :</b>&ensp;${esc(p?.gstin)}</div>
+    <div><b>GST No :</b>&ensp;${esc(p?.gstin?.toUpperCase())}</div>
   </div>
 </div></td></tr>
 

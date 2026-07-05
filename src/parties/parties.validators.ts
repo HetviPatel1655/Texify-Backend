@@ -21,6 +21,11 @@ const emptyToNull = z.preprocess(
   z.string().nullable().optional(),
 );
 
+const gstinField = z.preprocess(
+  (val) => (typeof val === "string" && val.trim() === "" ? null : typeof val === "string" ? val.toUpperCase() : val),
+  z.string().nullable().optional(),
+);
+
 function normalizePartyCode(name: string): string {
   const prefix = name
     .trim()
@@ -43,8 +48,8 @@ const partyPayloadSchema = z
       z.string().email().nullable().optional(),
     ),
     phone: emptyToNull,
-    gstin: emptyToNull,
-    gstNumber: emptyToNull,
+    gstin: gstinField,
+    gstNumber: gstinField,
     panNo: emptyToNull,
     address: emptyToNull,
     billingAddress1: emptyToNull,
@@ -70,7 +75,7 @@ const partyPayloadSchema = z
     partyType: data.partyType,
     email: data.email,
     phone: data.phone,
-    gstin: data.gstin ?? data.gstNumber,
+    gstin: (data.gstin ?? data.gstNumber)?.toUpperCase() ?? null,
     panNo: data.panNo,
     billingAddress1: data.billingAddress1 ?? data.address,
     billingAddress2: data.billingAddress2,
@@ -100,7 +105,7 @@ export const updatePartySchema = z.object({
     z.string().email().nullable().optional(),
   ),
   phone: emptyToNull,
-  gstin: emptyToNull,
+  gstin: gstinField,
   panNo: emptyToNull,
   billingAddress1: emptyToNull,
   billingAddress2: emptyToNull,

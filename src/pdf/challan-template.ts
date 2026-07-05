@@ -141,20 +141,20 @@ function buildSingleChallan(data: ChallanPdfData, compact?: boolean): string {
       <span style="flex:1;text-align:center;font-weight:bold">${esc(co?.city)}</span>
       <span style="flex:1">&nbsp;</span>
     </div>
-    <div style="font-size:12px;margin-bottom:${compact ? "0px" : "2px"}"><b>GST No :</b>&nbsp;&nbsp;${esc(co?.gstin)}</div>
+    <div style="font-size:12px;margin-bottom:${compact ? "0px" : "2px"}"><b>GST No :</b>&nbsp;&nbsp;${esc(co?.gstin?.toUpperCase())}</div>
 
     <table style="width:100%;border-collapse:collapse;border:${B};font-size:12px"><tbody><tr>
       <td style="border:${B};padding:${compact ? "3px 6px" : pad};vertical-align:top;width:40%">
         <div><b>Party :</b>&nbsp;&nbsp;<b>${esc(party?.name)}</b></div>
         ${partyAddr ? `<div>${partyAddr},</div>` : ""}
         ${partyCityLine ? `<div>${partyCityLine}${party?.phone ? ` Phone: ${esc(party.phone)}` : ""}</div>` : ""}
-        <div style="margin-top:${compact ? "2px" : "4px"}"><b>GST No :</b>&nbsp;&nbsp;<b>${esc(party?.gstin)}</b></div>
+        <div style="margin-top:${compact ? "2px" : "4px"}"><b>GST No :</b>&nbsp;&nbsp;<b>${esc(party?.gstin?.toUpperCase())}</b></div>
       </td>
       <td style="border:${B};padding:${compact ? "3px 6px" : pad};vertical-align:top;width:35%">
         <div><b>Delivery at :</b>&nbsp;&nbsp;<b>${esc(ch.deliveryPartyName ?? party?.name)}</b></div>
         ${delAddr ? `<div>${delAddr},</div>` : ""}
         ${delCityLine ? `<div>${delCityLine}</div>` : ""}
-        <div style="margin-top:${compact ? "2px" : "4px"}"><b>GST No :</b>&nbsp;&nbsp;<b>${esc(ch.deliveryGstin ?? party?.gstin)}</b></div>
+        <div style="margin-top:${compact ? "2px" : "4px"}"><b>GST No :</b>&nbsp;&nbsp;<b>${esc((ch.deliveryGstin ?? party?.gstin)?.toUpperCase())}</b></div>
       </td>
       <td style="border:${B};padding:${compact ? "3px 6px" : pad};vertical-align:top;width:25%">
         <div><b>Challan No :</b>&nbsp;&nbsp;<b>${String(ch.sequenceNumber).padStart(3, "0")}</b></div>

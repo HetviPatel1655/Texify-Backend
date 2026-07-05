@@ -14,7 +14,7 @@ export const upsertCompanyProfileSchema = z.object({
   country: z.string().trim().min(2).optional().default("India"),
   phone: z.string().nullable().optional(),
   email: z.string().email().nullable().optional(),
-  gstin: z.string().trim().min(15).max(15),
+  gstin: z.string().trim().min(15).max(15).toUpperCase(),
   pan: z.string().trim().min(10).max(10).nullable().optional(),
   msme: z.string().nullable().optional(),
   bankName: z.string().nullable().optional(),
