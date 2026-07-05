@@ -26,7 +26,7 @@ export const AuthService = {
     });
 
     const activeTU = activeTenantId
-      ? tenantUsers.find((tu) => tu.tenantId === activeTenantId)
+      ? tenantUsers.find((tu: any) => tu.tenantId === activeTenantId)
       : tenantUsers[0];
 
     return {
@@ -34,7 +34,7 @@ export const AuthService = {
       tenantId: activeTU?.tenantId ?? null,
       tenantRole: activeTU?.role ?? null,
       companyName: activeTU?.tenant?.companyProfile?.companyName ?? activeTU?.tenant?.name ?? null,
-      tenants: tenantUsers.map((tu) => ({
+      tenants: tenantUsers.map((tu: any) => ({
         id: tu.tenantId,
         name: tu.tenant.companyProfile?.companyName ?? tu.tenant.name,
         role: tu.role,

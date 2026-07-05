@@ -27,7 +27,7 @@ export const TenantsService = {
       orderBy: { createdAt: "asc" },
     });
 
-    const tenants = tenantUsers.map((tu) => ({
+    const tenants = tenantUsers.map((tu: any) => ({
       id: tu.tenant.id,
       name: tu.tenant.name,
       companyName: tu.tenant.companyProfile?.companyName ?? tu.tenant.name,
@@ -35,7 +35,7 @@ export const TenantsService = {
       createdAt: tu.tenant.createdAt,
     }));
 
-    const tenantIds = tenantUsers.map((tu) => tu.tenant.id);
+    const tenantIds = tenantUsers.map((tu: any) => tu.tenant.id);
     const hasProSub = tenantIds.length > 0
       ? !!(await prisma.subscription.findFirst({
           where: {

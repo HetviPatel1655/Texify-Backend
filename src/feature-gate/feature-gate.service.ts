@@ -71,7 +71,7 @@ async function userHasProSubscription(userId: string): Promise<boolean> {
   });
   if (tenantUsers.length === 0) return false;
 
-  const tenantIds = tenantUsers.map((tu) => tu.tenantId);
+  const tenantIds = tenantUsers.map((tu: any) => tu.tenantId);
   const activeSub = await prisma.subscription.findFirst({
     where: {
       tenantId: { in: tenantIds },
