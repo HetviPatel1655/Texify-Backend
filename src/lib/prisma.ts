@@ -34,60 +34,78 @@ const TENANT_SCOPED_MODELS: ReadonlySet<string> = new Set([
   "Attendance",
 ]);
 
+const READ_OPS = new Set([
+  "findUnique", "findUniqueOrThrow", "findFirst", "findFirstOrThrow",
+  "findMany", "count", "aggregate", "groupBy",
+]);
+
+const WRITE_OPS = new Set([
+  "update", "updateMany", "delete", "deleteMany",
+]);
+
+function hasTenantId(obj: any): boolean {
+  if (!obj) return false;
+  if (typeof obj.tenantId === "string") return true;
+  if (obj.tenant?.connect?.id) return true;
+  return false;
+}
+
+function resolveTenantId(args: any, operation: string): string {
+  const asyncTenantId = getCurrentTenantId();
+
+  if (operation === "create" || operation === "createMany" || operation === "createManyAndReturn" || operation === "upsert") {
+    const data = operation === "upsert" ? args?.create : args?.data;
+    if (Array.isArray(data)) {
+      const first = data[0];
+      return asyncTenantId ?? first?.tenantId ?? null;
+    }
+    return asyncTenantId ?? data?.tenantId ?? data?.tenant?.connect?.id ?? null;
+  }
+
+  return asyncTenantId ?? args?.where?.tenantId ?? null;
+}
+
 function withTenantScope(basePrisma: PrismaClient): PrismaClient {
   return (basePrisma as any).$extends({
     query: {
       $allOperations({ model, operation, args, query }: { model?: string; operation: string; args: any; query: (args: any) => any }) {
-        const tenantId = getCurrentTenantId();
-        if (!tenantId || !model || !TENANT_SCOPED_MODELS.has(model)) {
+        if (!model || !TENANT_SCOPED_MODELS.has(model)) {
           return query(args);
         }
 
-        switch (operation) {
-          case "findUnique":
-          case "findUniqueOrThrow":
-          case "findFirst":
-          case "findFirstOrThrow":
-          case "findMany":
-          case "count":
-          case "aggregate":
-          case "groupBy":
-            args.where = { ...args.where, tenantId };
-            break;
+        const tenantId = resolveTenantId(args, operation);
 
-          case "create":
-            args.data = args.data ?? {};
-            if (!args.data.tenantId) {
-              args.data.tenantId = tenantId;
-            }
-            break;
+        if (!tenantId) {
+          throw new Error(
+            `TENANT ISOLATION VIOLATION: ${model}.${operation}() called without tenantId. ` +
+            `This query would return/modify data across all tenants.`
+          );
+        }
 
-          case "createMany":
-          case "createManyAndReturn":
-            if (Array.isArray(args.data)) {
-              args.data = args.data.map((d: any) => ({
-                ...d,
-                tenantId: d.tenantId ?? tenantId,
-              }));
-            } else if (args.data) {
-              args.data.tenantId = args.data.tenantId ?? tenantId;
-            }
-            break;
-
-          case "update":
-          case "updateMany":
-          case "delete":
-          case "deleteMany":
-            args.where = { ...args.where, tenantId };
-            break;
-
-          case "upsert":
-            args.where = { ...args.where, tenantId };
-            args.create = args.create ?? {};
-            if (!args.create.tenantId) {
-              args.create.tenantId = tenantId;
-            }
-            break;
+        if (READ_OPS.has(operation)) {
+          args.where = { ...args.where, tenantId };
+        } else if (WRITE_OPS.has(operation)) {
+          args.where = { ...args.where, tenantId };
+        } else if (operation === "create") {
+          args.data = args.data ?? {};
+          if (!hasTenantId(args.data)) {
+            args.data.tenantId = tenantId;
+          }
+        } else if (operation === "createMany" || operation === "createManyAndReturn") {
+          if (Array.isArray(args.data)) {
+            args.data = args.data.map((d: any) => ({
+              ...d,
+              tenantId: d.tenantId ?? tenantId,
+            }));
+          } else if (args.data) {
+            args.data.tenantId = args.data.tenantId ?? tenantId;
+          }
+        } else if (operation === "upsert") {
+          args.where = { ...args.where, tenantId };
+          args.create = args.create ?? {};
+          if (!hasTenantId(args.create)) {
+            args.create.tenantId = tenantId;
+          }
         }
 
         return query(args);
