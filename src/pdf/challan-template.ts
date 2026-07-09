@@ -49,7 +49,7 @@ export interface ChallanPdfData {
     address2: string | null;
     city: string;
     phone: string | null;
-    gstin: string;
+    gstin: string | null;
   } | null;
   rowsPerColumn: number;
   duplicate: boolean;

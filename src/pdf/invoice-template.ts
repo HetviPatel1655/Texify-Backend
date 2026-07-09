@@ -87,7 +87,7 @@ export interface InvoicePdfData {
     city: string;
     postalCode: string | null;
     phone: string | null;
-    gstin: string;
+    gstin: string | null;
     msme: string | null;
     state: string;
     stateCode: string;
