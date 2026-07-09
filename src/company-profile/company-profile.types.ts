@@ -13,7 +13,7 @@ export interface CompanyProfileDto {
   country: string;
   phone: string | null;
   email: string | null;
-  gstin: string;
+  gstin: string | null;
   pan: string | null;
   msme: string | null;
   bankName: string | null;
